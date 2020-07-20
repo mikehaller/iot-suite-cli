@@ -14,10 +14,6 @@ import (
     "time" // print current date and time
     
     "github.com/TylerBrock/colorjson"
-    
-    "bosch-iot-suite/utils"
-    "bosch-iot-suite/auth"
-    "bosch-iot-suite/config"
 )
 
 // STATUS.BOSCH-IOT-SUITE.COM JSON
@@ -59,9 +55,9 @@ type StatusComponent struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func showServiceStatusHealth(conf *config.Configuration) {
+func showServiceStatusHealth(conf *Configuration) {
 	dt := time.Now().UTC()
-	fmt.Println(utils.Teal("Service Status Health as of ", dt.String()," in region ",conf.Region," sorted by ",conf.Sort));
+	fmt.Println(Teal("Service Status Health as of ", dt.String()," in region ",conf.Region," sorted by ",conf.Sort));
 	
 	response, err := http.Get("https://status.bosch-iot-suite.com/api/v1/components?sort="+conf.Sort+"&per_page=50")
 	if err != nil {
@@ -86,13 +82,13 @@ func showServiceStatusHealth(conf *config.Configuration) {
 		var statusComponent = responseObject.StatusComponents[i]
 		if conf.Region=="all" || strings.Contains(statusComponent.Name, strings.ToUpper(conf.Region)) { 
 			if conf.Verbose {
-				fmt.Printf("\n%s\n",utils.Purple(statusComponent.Name))
-				fmt.Printf("\t%15s %-60s\n","Description:",utils.Teal(statusComponent.Description))
-				fmt.Printf("\t%15s %-60s\n","Link:",utils.Teal(statusComponent.Link))
-				fmt.Printf("\t%15s %-60s\n","Updated At",utils.Teal(statusComponent.UpdatedAt))
-				fmt.Printf("\t%15s %-60s\n","Status:",utils.Green(statusComponent.StatusName))
+				fmt.Printf("\n%s\n",Purple(statusComponent.Name))
+				fmt.Printf("\t%15s %-60s\n","Description:",Teal(statusComponent.Description))
+				fmt.Printf("\t%15s %-60s\n","Link:",Teal(statusComponent.Link))
+				fmt.Printf("\t%15s %-60s\n","Updated At",Teal(statusComponent.UpdatedAt))
+				fmt.Printf("\t%15s %-60s\n","Status:",Green(statusComponent.StatusName))
 			} else {
-				fmt.Printf("%-60s %10s\n",statusComponent.Name,utils.Green(statusComponent.StatusName))
+				fmt.Printf("%-60s %10s\n",statusComponent.Name,Green(statusComponent.StatusName))
 			}
 		} else {
 			// fmt.Println("Filtered by region")
@@ -102,15 +98,15 @@ func showServiceStatusHealth(conf *config.Configuration) {
 
 
 
-func things(accessToken string, conf *config.Configuration) {
+func things(accessToken string, conf *Configuration) {
 	if accessToken == "" {
-		fmt.Println(utils.Fatal("Not authenticated, please authorize first with the 'auth' command"))
+		fmt.Println(Fatal("Not authenticated, please authorize first with the 'auth' command"))
 		os.Exit(3)
 	}
 	
 	client := &http.Client{}
 
-	fmt.Println(utils.Teal("Requested Fields:"), utils.Warn(conf.Fields))
+	fmt.Println(Teal("Requested Fields:"), Warn(conf.Fields))
 	
 	req,err1 := http.NewRequest("GET", "https://things.eu-1.bosch-iot-suite.com/api/2/search/things?fields="+conf.Fields, nil)
 	if err1 != nil {
@@ -126,7 +122,7 @@ func things(accessToken string, conf *config.Configuration) {
     }
 
 	fmt.Println("Response:")
-	fmt.Println(utils.Magenta(resp.Status))
+	fmt.Println(Magenta(resp.Status))
 	responseData,err3 := ioutil.ReadAll(resp.Body)
 	if err3 != nil {
         log.Fatal(err3)
@@ -143,24 +139,24 @@ func things(accessToken string, conf *config.Configuration) {
 }
 
 var (
-	conf *config.Configuration
+	conf *Configuration
 )
 
 func main() {
-	utils.InitWindowsColors()
+	InitWindowsColors()
 	fmt.Println("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.\n")
-	utils.Hello("Mike")
+	Hello("Mike")
 	
 	//args := os.Args[1:]
 	
-	conf = config.ReadConfig()
+	conf = ReadConfig()
 	
 	if conf.Verbose {
-		fmt.Println("Verbose:",utils.Teal(conf.Verbose))
+		fmt.Println("Verbose:",Teal(conf.Verbose))
 		fmt.Println()
-		fmt.Println("clientId:",utils.Teal(conf.ClientId))
-		fmt.Println("clientSecret:",utils.Teal(conf.ClientSecret))
-		fmt.Println("scope:",utils.Teal(conf.Scope))
+		fmt.Println("clientId:",Teal(conf.ClientId))
+		fmt.Println("clientSecret:",Teal(conf.ClientSecret))
+		fmt.Println("scope:",Teal(conf.Scope))
 		fmt.Println()
 		fmt.Println("config",conf)
 	}
@@ -169,13 +165,13 @@ func main() {
 		case "status":
 			showServiceStatusHealth(conf)
 		case "auth":
-			auth.Authorize(conf)
+			Authorize(conf)
 		case "things":
-	        token := auth.Authorize(conf)
+	        token := Authorize(conf)
 			things(token, conf)
 		default:
-			fmt.Println(utils.Warn("Unknown command:", os.Args[1]))
+			fmt.Println(Warn("Unknown command:", os.Args[1]))
 	}
 	
-	fmt.Println(utils.Magenta("\n#likeabosch"))
+	fmt.Println(Magenta("\n#likeabosch"))
 }

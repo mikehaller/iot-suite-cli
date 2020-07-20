@@ -1,4 +1,4 @@
-package auth
+package main
 
 import (
 	"os"
@@ -8,8 +8,6 @@ import (
     "net/http"
     "io/ioutil"
     "encoding/json"
-    "bosch-iot-suite/utils"
-    "bosch-iot-suite/config"
     "github.com/TylerBrock/colorjson"
 )
 
@@ -36,28 +34,28 @@ grant_type=client_credentials
 &scope=service:iot-hub-prod:t0262c358aab544399b78b4811bfd862b_hub/full-access%20service:iot-manager:0262c358-aab5-4439-9b78-b4811bfd862b_iot-manager/full-access%20service:iot-rollouts:0262c358-aab5-4439-9b78-b4811bfd862b_rollouts/full-access%20service:iot-things-eu-1:0262c358-aab5-4439-9b78-b4811bfd862b_things/full-access
 
 */
-func Authorize(conf *config.Configuration) string {
+func Authorize(conf *Configuration) string {
 	
 	var clientId = conf.ClientId
 	var clientSecret = conf.ClientSecret
 	var scope = conf.Scope
 	
 	if clientId == "" {
-		fmt.Println(utils.Fatal("You need to specify the OAuth2 Client ID with -clientId"))
+		fmt.Println(Fatal("You need to specify the OAuth2 Client ID with -clientId"))
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
 	}
 
 	if clientSecret == "" {
-		fmt.Println(utils.Fatal("You need to specify the OAuth2 Client Secret with -clientSecret"))
+		fmt.Println(Fatal("You need to specify the OAuth2 Client Secret with -clientSecret"))
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
 	}
 	
 	if scope == "" {
-		fmt.Println(utils.Fatal("You need to specify the OAuth2 Scope with -scope"))
+		fmt.Println(Fatal("You need to specify the OAuth2 Scope with -scope"))
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
@@ -72,7 +70,7 @@ func Authorize(conf *config.Configuration) string {
 	
 	if response.StatusCode != 200 {
 		fmt.Println("HTTP Response:")
-		fmt.Println(utils.Fatal(response.Status))
+		fmt.Println(Fatal(response.Status))
 		responseData, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 	        log.Fatal(err)
@@ -104,11 +102,11 @@ func Authorize(conf *config.Configuration) string {
     var responseObject OAuthToken
 	json.Unmarshal(responseData, &responseObject)
 	
-	fmt.Println(utils.Teal("Token Type:"), utils.Warn(responseObject.TokenType))
-	fmt.Println(utils.Teal("Scope:"), utils.Warn(responseObject.Scope))
-	fmt.Println(utils.Teal("Access Token:"), utils.Warn(responseObject.AccessToken))
+	fmt.Println(Teal("Token Type:"), Warn(responseObject.TokenType))
+	fmt.Println(Teal("Scope:"), Warn(responseObject.Scope))
+	fmt.Println(Teal("Access Token:"), Warn(responseObject.AccessToken))
 	fmt.Println()
-	fmt.Println(utils.Warn("Warning:"),"Access token will expire in", responseObject.ExpiresIn,"seconds.")
+	fmt.Println(Warn("Warning:"),"Access token will expire in", responseObject.ExpiresIn,"seconds.")
 	
 	return responseObject.AccessToken
 }

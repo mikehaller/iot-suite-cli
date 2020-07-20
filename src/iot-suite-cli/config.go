@@ -1,11 +1,11 @@
-package config
+package main
 
 import (
 	"os"
 	"fmt"
     "github.com/spf13/viper" // yml config
     "github.com/spf13/pflag" // yml config binding to flags
-    "bosch-iot-suite/utils")
+)
 
 
 func configDefaults() {
@@ -68,7 +68,7 @@ func ReadConfig() *Configuration {
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil { // Handle errors reading the config file
-		fmt.Println(utils.Warn("Configuration file not found, creating configuration file with current set of arguments in current working directory."));
+		fmt.Println(Warn("Configuration file not found, creating configuration file with current set of arguments in current working directory."));
 		viper.SafeWriteConfigAs("./config.yaml") 
 	}
 	
