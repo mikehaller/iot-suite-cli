@@ -1,3 +1,0 @@
-Install Dependencies
- set GOPATH=...
- go get golang.org/x/sys/windows
