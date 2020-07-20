@@ -24,7 +24,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v iot-suite-cli
+        go get -v -d ./...
 
     - name: Build
       run: go build -v iot-suite-cli
