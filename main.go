@@ -13,6 +13,8 @@ import (
     "strings"
     "time" // print current date and time
     
+    "github.com/mikehaller/iot-suite-cli/iotsuite"
+    
     "github.com/TylerBrock/colorjson"
 )
 
@@ -55,9 +57,9 @@ type StatusComponent struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-func showServiceStatusHealth(conf *Configuration) {
+func showServiceStatusHealth(conf *iotsuite.Configuration) {
 	dt := time.Now().UTC()
-	fmt.Println(Teal("Service Status Health as of ", dt.String()," in region ",conf.Region," sorted by ",conf.Sort));
+	fmt.Println(iotsuite.Teal("Service Status Health as of ", dt.String()," in region ",conf.Region," sorted by ",conf.Sort));
 	
 	response, err := http.Get("https://status.bosch-iot-suite.com/api/v1/components?sort="+conf.Sort+"&per_page=50")
 	if err != nil {
@@ -82,13 +84,13 @@ func showServiceStatusHealth(conf *Configuration) {
 		var statusComponent = responseObject.StatusComponents[i]
 		if conf.Region=="all" || strings.Contains(statusComponent.Name, strings.ToUpper(conf.Region)) { 
 			if conf.Verbose {
-				fmt.Printf("\n%s\n",Purple(statusComponent.Name))
-				fmt.Printf("\t%15s %-60s\n","Description:",Teal(statusComponent.Description))
-				fmt.Printf("\t%15s %-60s\n","Link:",Teal(statusComponent.Link))
-				fmt.Printf("\t%15s %-60s\n","Updated At",Teal(statusComponent.UpdatedAt))
-				fmt.Printf("\t%15s %-60s\n","Status:",Green(statusComponent.StatusName))
+				fmt.Printf("\n%s\n",iotsuite.Purple(statusComponent.Name))
+				fmt.Printf("\t%15s %-60s\n","Description:",iotsuite.Teal(statusComponent.Description))
+				fmt.Printf("\t%15s %-60s\n","Link:",iotsuite.Teal(statusComponent.Link))
+				fmt.Printf("\t%15s %-60s\n","Updated At",iotsuite.Teal(statusComponent.UpdatedAt))
+				fmt.Printf("\t%15s %-60s\n","Status:",iotsuite.Green(statusComponent.StatusName))
 			} else {
-				fmt.Printf("%-60s %10s\n",statusComponent.Name,Green(statusComponent.StatusName))
+				fmt.Printf("%-60s %10s\n",statusComponent.Name,iotsuite.Green(statusComponent.StatusName))
 			}
 		} else {
 			// fmt.Println("Filtered by region")
@@ -98,15 +100,15 @@ func showServiceStatusHealth(conf *Configuration) {
 
 
 
-func things(accessToken string, conf *Configuration) {
+func things(accessToken string, conf *iotsuite.Configuration) {
 	if accessToken == "" {
-		fmt.Println(Fatal("Not authenticated, please authorize first with the 'auth' command"))
+		fmt.Println(iotsuite.Fatal("Not authenticated, please authorize first with the 'auth' command"))
 		os.Exit(3)
 	}
 	
 	client := &http.Client{}
 
-	fmt.Println(Teal("Requested Fields:"), Warn(conf.Fields))
+	fmt.Println(iotsuite.Teal("Requested Fields:"), iotsuite.Warn(conf.Fields))
 	
 	req,err1 := http.NewRequest("GET", "https://things.eu-1.bosch-iot-suite.com/api/2/search/things?fields="+conf.Fields, nil)
 	if err1 != nil {
@@ -122,7 +124,7 @@ func things(accessToken string, conf *Configuration) {
     }
 
 	fmt.Println("Response:")
-	fmt.Println(Magenta(resp.Status))
+	fmt.Println(iotsuite.Magenta(resp.Status))
 	responseData,err3 := ioutil.ReadAll(resp.Body)
 	if err3 != nil {
         log.Fatal(err3)
@@ -139,24 +141,24 @@ func things(accessToken string, conf *Configuration) {
 }
 
 var (
-	conf *Configuration
+	conf *iotsuite.Configuration
 )
 
 func main() {
-	InitWindowsColors()
+	iotsuite.InitWindowsColors()
 	fmt.Println("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.\n")
-	Hello("Mike")
+	iotsuite.Hello("Mike")
 	
 	//args := os.Args[1:]
 	
-	conf = ReadConfig()
+	conf = iotsuite.ReadConfig()
 	
 	if conf.Verbose {
-		fmt.Println("Verbose:",Teal(conf.Verbose))
+		fmt.Println("Verbose:",iotsuite.Teal(conf.Verbose))
 		fmt.Println()
-		fmt.Println("clientId:",Teal(conf.ClientId))
-		fmt.Println("clientSecret:",Teal(conf.ClientSecret))
-		fmt.Println("scope:",Teal(conf.Scope))
+		fmt.Println("clientId:",iotsuite.Teal(conf.ClientId))
+		fmt.Println("clientSecret:",iotsuite.Teal(conf.ClientSecret))
+		fmt.Println("scope:",iotsuite.Teal(conf.Scope))
 		fmt.Println()
 		fmt.Println("config",conf)
 	}
@@ -165,13 +167,13 @@ func main() {
 		case "status":
 			showServiceStatusHealth(conf)
 		case "auth":
-			Authorize(conf)
+			iotsuite.Authorize(conf)
 		case "things":
-	        token := Authorize(conf)
+	        token := iotsuite.Authorize(conf)
 			things(token, conf)
 		default:
-			fmt.Println(Warn("Unknown command:", os.Args[1]))
+			fmt.Println(iotsuite.Warn("Unknown command:", os.Args[1]))
 	}
 	
-	fmt.Println(Magenta("\n#likeabosch"))
+	fmt.Println(iotsuite.Magenta("\n#likeabosch"))
 }
