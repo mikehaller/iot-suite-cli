@@ -1,5 +1,13 @@
-name: Create Release
+name: Create Manual Release
 
+on:
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'Changelog'
+        required: true
+        default: 'No changes.'
+  
 jobs:
   build:
     name: Create Draft Release
@@ -21,9 +29,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: |
-            Changes in this Release
-            - First Change
-            - Second Change
+          body: ${{ github.event.inputs.changelog }}
           draft: true
           prerelease: true
