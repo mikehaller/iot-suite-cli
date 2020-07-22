@@ -63,7 +63,7 @@ func showServiceStatusHealth(conf *iotsuite.Configuration) {
 	
 	response, err := http.Get("https://status.bosch-iot-suite.com/api/v1/components?sort="+conf.Sort+"&per_page=50")
 	if err != nil {
-        fmt.Print("Error: %s",err.Error())
+        fmt.Printf("Error: %s",err.Error())
         os.Exit(1)
     }
 	responseData, err := ioutil.ReadAll(response.Body)
@@ -146,7 +146,8 @@ var (
 
 func main() {
 	iotsuite.InitWindowsColors()
-	fmt.Println("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.\n")
+	fmt.Println("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.")
+	fmt.Println()
 	iotsuite.Hello("Mike")
 	
 	//args := os.Args[1:]

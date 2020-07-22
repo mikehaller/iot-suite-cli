@@ -90,7 +90,7 @@ func Authorize(conf *Configuration) string {
 	}
 	
 	if err != nil {
-        fmt.Print("Error: %s",err.Error())
+        fmt.Printf("Error: %s",err.Error())
         os.Exit(1)
     }
 	responseData, err := ioutil.ReadAll(response.Body)
