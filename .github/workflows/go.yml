@@ -31,11 +31,3 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-      
-    - run: ls -al   
-   
-    - name: Archive artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: dist
-        path: ./iot-suite-cli
