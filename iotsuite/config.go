@@ -68,7 +68,7 @@ func ReadConfig() *Configuration {
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil { // Handle errors reading the config file
-		fmt.Println(Warn("Configuration file not found, creating configuration file with current set of arguments in current working directory."));
+		fmt.Println("Configuration file not found, creating configuration file with current set of arguments in current working directory.");
 		viper.SafeWriteConfigAs("./config.yaml") 
 	}
 	

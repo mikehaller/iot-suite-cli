@@ -9,6 +9,7 @@ import (
     "io/ioutil"
     "encoding/json"
     "github.com/TylerBrock/colorjson"
+    "github.com/TwinProduction/go-color"
 )
 
 // OAuth Token Response
@@ -41,21 +42,21 @@ func Authorize(conf *Configuration) string {
 	var scope = conf.Scope
 	
 	if clientId == "" {
-		fmt.Println(Fatal("You need to specify the OAuth2 Client ID with -clientId"))
+		fmt.Println("You need to specify the OAuth2 Client ID with -clientId")
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
 	}
 
 	if clientSecret == "" {
-		fmt.Println(Fatal("You need to specify the OAuth2 Client Secret with -clientSecret"))
+		fmt.Println("You need to specify the OAuth2 Client Secret with -clientSecret")
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
 	}
 	
 	if scope == "" {
-		fmt.Println(Fatal("You need to specify the OAuth2 Scope with -scope"))
+		fmt.Println("You need to specify the OAuth2 Scope with -scope")
 		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
 		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
 		os.Exit(2)
@@ -70,7 +71,7 @@ func Authorize(conf *Configuration) string {
 	
 	if response.StatusCode != 200 {
 		fmt.Println("HTTP Response:")
-		fmt.Println(Fatal(response.Status))
+		fmt.Println(response.Status)
 		responseData, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 	        log.Fatal(err)
@@ -90,7 +91,7 @@ func Authorize(conf *Configuration) string {
 	}
 	
 	if err != nil {
-        fmt.Printf("Error: %s",err.Error())
+        log.Fatal(err)
         os.Exit(1)
     }
 	responseData, err := ioutil.ReadAll(response.Body)
@@ -102,11 +103,11 @@ func Authorize(conf *Configuration) string {
     var responseObject OAuthToken
 	json.Unmarshal(responseData, &responseObject)
 	
-	fmt.Println(Teal("Token Type:"), Warn(responseObject.TokenType))
-	fmt.Println(Teal("Scope:"), Warn(responseObject.Scope))
-	fmt.Println(Teal("Access Token:"), Warn(responseObject.AccessToken))
+	fmt.Println(color.Ize(color.Cyan,"Token Type:"), color.Ize(color.Yellow,responseObject.TokenType))
+	fmt.Println(color.Ize(color.Cyan,"Scope:"), color.Ize(color.Yellow,responseObject.Scope))
+	fmt.Println(color.Ize(color.Cyan,"Access Token:"), color.Ize(color.Yellow,responseObject.AccessToken))
 	fmt.Println()
-	fmt.Println(Warn("Warning:"),"Access token will expire in", responseObject.ExpiresIn,"seconds.")
+	//fmt.Println(color.Ize(color.Yellow,"Warning: Access token will expire in "+responseObject.ExpiresIn+" seconds."))
 	
 	return responseObject.AccessToken
 }
