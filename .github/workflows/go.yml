@@ -1,4 +1,4 @@
-name: Go
+name: Build Artifact
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
     - name: Archive production artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: Dist
+          name: dist
           path: |
             iot-suite-cli
             iot-suite-cli.exe
