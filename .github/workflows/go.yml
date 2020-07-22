@@ -36,10 +36,8 @@ jobs:
     - name: Test
       run: go test -v ./...
       
-    - name: Archive production artifacts
+    - name: Archive artifacts
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: |
-          iot-suite-cli
-          iot-suite-cli.exe
+        path: *
