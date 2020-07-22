@@ -31,7 +31,7 @@ jobs:
         go get -v -d ./...
 
     - name: Build
-      run: go build -v ./...
+      run: go build -o iot-suite-cli -v ./...
 
     - name: Test
       run: go test -v ./...
@@ -42,4 +42,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: ./**
+        path: ./iot-suite-cli
