@@ -1,4 +1,4 @@
-name: Build Artifact
+name: Continuous Build
 
 on:
   push:
@@ -10,17 +10,13 @@ jobs:
 
   build:
     name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        go-version: [1.13.x, 1.14.x]
+    runs-on: ubuntu-latest
     steps:
 
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
-        go-version: ${{ matrix.go-version }}
+        go-version: 1.14.x
       id: go
 
     - name: Check out code into the Go module directory
