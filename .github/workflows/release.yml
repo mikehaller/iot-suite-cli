@@ -20,7 +20,12 @@ jobs:
         with:
             platforms: 'linux/amd64, darwin/amd64, windows/amd64'
             package: ''
-            name: 'program'
+            name: 'iot-suite-cli'
             compress: 'false'
             dest: 'dist'
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/**
             
