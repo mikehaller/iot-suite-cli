@@ -1,15 +1,16 @@
 package iotsuite
 
 import (
-	"os"
+	"encoding/json"
 	"fmt"
-    "log"
-    "net/url"
-    "net/http"
-    "io/ioutil"
-    "encoding/json"
-    "github.com/TylerBrock/colorjson"
-    "github.com/TwinProduction/go-color"
+	"github.com/TylerBrock/colorjson"
+	"github.com/fatih/color"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
 )
 
 // OAuth Token Response
@@ -22,11 +23,10 @@ import (
 }*/
 type OAuthToken struct {
 	AccessToken string `json:"access_token"`
-	ExpiresIn int `json:"expires_in"`
-	Scope string `json:"scope"`
-	TokenType string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+	Scope       string `json:"scope"`
+	TokenType   string `json:"token_type"`
 }
-
 
 /*
 grant_type=client_credentials
@@ -35,79 +35,95 @@ grant_type=client_credentials
 &scope=service:iot-hub-prod:t0262c358aab544399b78b4811bfd862b_hub/full-access%20service:iot-manager:0262c358-aab5-4439-9b78-b4811bfd862b_iot-manager/full-access%20service:iot-rollouts:0262c358-aab5-4439-9b78-b4811bfd862b_rollouts/full-access%20service:iot-things-eu-1:0262c358-aab5-4439-9b78-b4811bfd862b_things/full-access
 
 */
+
+func err() {
+	fmt.Println("You need to specify all three OAuth2 client parameters: clientId, clientSecret and scope")
+	fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/")
+	os.Exit(2)
+}
+
 func Authorize(conf *Configuration) string {
-	
+
+	var existingToken = LoadToken()
+	if existingToken.AccessToken != "" {
+		fmt.Printf("%v\n", color.YellowString("Warning: There is an existing token in the disk cache."))
+		fmt.Printf("%v\n", color.YellowString("Warning: Access token is being refreshed and updated in disk cache."))
+	}
+
 	var clientId = conf.ClientId
 	var clientSecret = conf.ClientSecret
 	var scope = conf.Scope
-	
-	if clientId == "" {
-		fmt.Println("You need to specify the OAuth2 Client ID with -clientId")
-		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
-		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
-		os.Exit(2)
+
+	if clientId == "" || clientSecret == "" || scope == "" {
+		err()
 	}
 
-	if clientSecret == "" {
-		fmt.Println("You need to specify the OAuth2 Client Secret with -clientSecret")
-		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
-		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
-		os.Exit(2)
-	}
-	
-	if scope == "" {
-		fmt.Println("You need to specify the OAuth2 Scope with -scope")
-		fmt.Println("\nTo read about the command line options, use '" +os.Args[0] + "auth -h'",);
-		fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/");
-		os.Exit(2)
-	}
-	
 	response, err := http.PostForm("https://access.bosch-iot-suite.com/token",
 		url.Values{
-				"grant_type" : { "client_credentials" },
-				"client_id" : { clientId },
-				"client_secret" : { clientSecret },
-				"scope" : { scope }})
-	
+			"grant_type":    {"client_credentials"},
+			"client_id":     {clientId},
+			"client_secret": {clientSecret},
+			"scope":         {scope}})
+
 	if response.StatusCode != 200 {
 		fmt.Println("HTTP Response:")
 		fmt.Println(response.Status)
 		responseData, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-	        log.Fatal(err)
-	        os.Exit(2)
-	    }
+			log.Fatal(err)
+			os.Exit(2)
+		}
 		// https://stackoverflow.com/questions/19038598/how-can-i-pretty-print-json-using-go
 		var obj map[string]interface{}
 		json.Unmarshal([]byte(responseData), &obj)
-	    // Make a custom formatter with indent set
-	    f := colorjson.NewFormatter()
-	    f.Indent = 4
-	    // Marshall the Colorized JSON
-	    s, _ := f.Marshal(obj)
-	    fmt.Println(string(s))
-	    
+		// Make a custom formatter with indent set
+		f := colorjson.NewFormatter()
+		f.Indent = 4
+		// Marshall the Colorized JSON
+		s, _ := f.Marshal(obj)
+		fmt.Println(string(s))
+
 		os.Exit(3)
 	}
-	
+
 	if err != nil {
-        log.Fatal(err)
-        os.Exit(1)
-    }
+		log.Fatal(err)
+		os.Exit(1)
+	}
 	responseData, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-        log.Fatal(err)
-        os.Exit(2)
-    }
-    
-    var responseObject OAuthToken
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(2)
+	}
+
+	var responseObject OAuthToken
 	json.Unmarshal(responseData, &responseObject)
-	
-	fmt.Println(color.Ize(color.Cyan,"Token Type:"), color.Ize(color.Yellow,responseObject.TokenType))
-	fmt.Println(color.Ize(color.Cyan,"Scope:"), color.Ize(color.Yellow,responseObject.Scope))
-	fmt.Println(color.Ize(color.Cyan,"Access Token:"), color.Ize(color.Yellow,responseObject.AccessToken))
+
+	fmt.Printf("%v %v\n", color.BlueString("Token Type:"), color.GreenString(responseObject.TokenType))
+	fmt.Printf("\n%v %v\n", color.BlueString("Scope:"), color.GreenString(responseObject.Scope))
+	fmt.Printf("\n%v\n%v\n", color.BlueString("Access Token:"), color.GreenString(responseObject.AccessToken))
+
 	fmt.Println()
-	//fmt.Println(color.Ize(color.Yellow,"Warning: Access token will expire in "+responseObject.ExpiresIn+" seconds."))
-	
+
+	fmt.Printf("%v %v %v\n", color.YellowString("Warning: Access token will expire in"), color.RedString(strconv.Itoa(responseObject.ExpiresIn)), color.YellowString("seconds."))
+
+	StoreToken(&responseObject)
+
 	return responseObject.AccessToken
+}
+
+func configPath() string {
+	return "accesstoken.json"
+}
+
+func StoreToken(tokenObject *OAuthToken) {
+	jsonC, _ := json.Marshal(tokenObject)
+	ioutil.WriteFile(configPath(), jsonC, os.ModeAppend)
+}
+
+func LoadToken() OAuthToken {
+    data, _ := ioutil.ReadFile(configPath())
+    var token OAuthToken
+    json.Unmarshal(data, &token)
+    return token
 }

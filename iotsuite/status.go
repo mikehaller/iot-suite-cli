@@ -10,7 +10,6 @@ import (
 	"strings"
 	"encoding/json"
 	"net/http"
-	"github.com/TwinProduction/go-color"
 )
 
 // STATUS.BOSCH-IOT-SUITE.COM JSON
@@ -52,18 +51,18 @@ type StatusComponent struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
-func ShowServiceStatusHealth(conf *Configuration) {
+func ShowServiceStatusHealth(region string, sort string, verbose bool) {
 	dt := time.Now().UTC()
 
 	fmt.Print(color.Cyan)
-	fmt.Printf("Service Status Health as of %s in region %s sorted by %s", dt.String(), conf.Region, conf.Sort)
+	fmt.Printf("Service Status Health as of %s in region %s sorted by %s", dt.String(), region, sort)
 	fmt.Print(color.Reset)
 	fmt.Println()
 
 	//color.Info.Tips("tips style message")
 	//color.Red.Println("Simple to use color")
 
-	response, err := http.Get("https://status.bosch-iot-suite.com/api/v1/components?sort=" + conf.Sort + "&per_page=50")
+	response, err := http.Get("https://status.bosch-iot-suite.com/api/v1/components?sort=" + sort + "&per_page=50")
 	if err != nil {
 		fmt.Printf("Error: %s", err.Error())
 		os.Exit(1)
@@ -84,8 +83,8 @@ func ShowServiceStatusHealth(conf *Configuration) {
 
 	for i := 0; i < len(responseObject.StatusComponents); i++ {
 		var statusComponent = responseObject.StatusComponents[i]
-		if conf.Region == "all" || strings.Contains(statusComponent.Name, strings.ToUpper(conf.Region)) {
-			if conf.Verbose {
+		if region == "all" || strings.Contains(statusComponent.Name, strings.ToUpper(region)) {
+			if verbose {
 				fmt.Printf("\n%s\n", (statusComponent.Name))
 				fmt.Printf("\t%15s %-60s\n", "Description:", statusComponent.Description)
 				fmt.Printf("\t%15s %-60s\n", "Link:", statusComponent.Link)

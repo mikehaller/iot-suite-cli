@@ -1,0 +1,10 @@
+clientid: "e726c3f8-762e-4a65-b30d-6efe3ac56075"
+clientsecret: "CJwzrQqPG-BC"
+fields: thingId,attributes,features
+help: false
+region: all
+scope: "service:iot-hub-prod:t0262c358aab544399b78b4811bfd862b_hub/full-access service:iot-manager:0262c358-aab5-4439-9b78-b4811bfd862b_iot-manager/full-access service:iot-rollouts:0262c358-aab5-4439-9b78-b4811bfd862b_rollouts/full-access service:iot-things-eu-1:0262c358-aab5-4439-9b78-b4811bfd862b_things/full-access"
+#scope: "service:iot-things-eu-1:0262c358-aab5-4439-9b78-b4811bfd862b_things/full-access"
+sort: name
+verbose: false
+solutionId: "0262c358-aab5-4439-9b78-b4811bfd862b_things"
