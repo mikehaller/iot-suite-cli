@@ -10,7 +10,6 @@ import (
 	"strings"
 	"encoding/json"
 	"net/http"
-	"github.com/fatih/color"
 )
 
 // STATUS.BOSCH-IOT-SUITE.COM JSON
@@ -55,9 +54,7 @@ type StatusComponent struct {
 func ShowServiceStatusHealth(region string, sort string, verbose bool) {
 	dt := time.Now().UTC()
 
-	fmt.Print(color.Cyan)
 	fmt.Printf("Service Status Health as of %s in region %s sorted by %s", dt.String(), region, sort)
-	fmt.Print(color.Reset)
 	fmt.Println()
 
 	//color.Info.Tips("tips style message")
