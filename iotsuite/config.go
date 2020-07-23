@@ -22,8 +22,14 @@ func configDefaults() {
         fmt.Println()
         fmt.Println("Available commands:")
         fmt.Println("\t status \t Show service status health")
-        fmt.Println("\t auth \t Authorize using an OAuth2 Client")
+        fmt.Println("\t auth \t Test OAuth2 configuration")
+        fmt.Println("\t oauth2 \t Test OAuth2 configuration")
+        fmt.Println("\t solution \t Print Solution configuration")
         fmt.Println("\t things \t List things")
+        fmt.Println("\t rules \t List rules")
+        fmt.Println("\t tasks \t List tasks ")
+        fmt.Println("\t devices \t List devices")
+        fmt.Println("\t groups \t List device groups")
         fmt.Println()
         fmt.Println("See '"+os.Args[0]+" <command> -help' to read about specific subcommands and options.")
         fmt.Println()
@@ -45,7 +51,8 @@ type Configuration struct {
 	ClientSecret     string `yaml:"OAuthClientSecret"`
 	Scope     string `yaml:"Scope"`
 	// Bosch IoT Things
-	Fields string `yaml:"fields"`	
+	Fields string `yaml:"fields"`
+	SolutionId string `yaml:"solutionId"`
 }
 
 
@@ -58,7 +65,10 @@ func ReadConfig() *Configuration {
 	pflag.String("clientId", "", "OAuth Client ID for client credentials flow")
 	pflag.String("clientSecret", "", "OAuth Client Secret")
 	pflag.String("scope", "", "Scope in the form service:<service>:<instanceId>/<role>, see https://accounts.bosch-iot-suite.com/oauth2-clients/")
+	
 	pflag.String("fields","thingId,attributes,features","Comma separated list of fields to return in Things Search query")
+	pflag.String("solutionId","","The Bosch IoT Things Solution ID (aka Service Instance ID)")
+	
 	pflag.Bool("help",false,"Shows help")
 
 	configDefaults();
@@ -80,7 +90,6 @@ func ReadConfig() *Configuration {
 	
 	if len(os.Args) < 2 || conf.Help {
 		pflag.Usage()
-		os.Exit(1)
 	}
 	
 	return conf

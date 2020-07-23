@@ -1,0 +1,482 @@
+openapi: "3.0.0"
+info:
+  version: 1.1.2
+  title:  HTTP Adapter
+  description: "The HTTP protocol adapter exposes a HTTP based API for Bosch IoT Hub’s Telemetry and Event endpoints.To send data through the HTTP Adapter you can use this page.
+
+
+    Only authenticated devices are allowed to send messages to Bosch IoT Hub. To prove its identity your device has to pass the credentials registered in the credential registration steps.
+
+
+    Login by clicking the **Authorize** button. The username is made up of the `auth-id` defined for the credential followed by a `@` and the id of your tenant.
+
+
+     So for example if you have chosen `auth-id: credential001` and your tenant-id is
+
+    `t123456789abcdef123456789abcdef12`, the username will be like:
+    `credential001@t123456789abcdef123456789abcdef12`.
+
+
+    The password is the plaintext password that was created during the credential registration.
+
+
+    **Note:** If your browser opens a 'Certificate Selection Popup Dialog', please cancel it and continue."
+servers:
+  - url: "https://http.bosch-iot-hub.com"
+paths:
+  /telemetry:
+    post:
+      parameters:
+      -  $ref: "#/components/parameters/qos-level"
+      -  $ref: "#/components/parameters/hono-ttd"
+      tags:
+      - telemetry
+      requestBody:
+        required: true
+        description: Arbitrary payload encoded according to the given content type.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          '*/*':
+            schema:
+              type: object
+      summary: Publish Telemetry Data
+      responses:
+        '200':
+          description: |
+            The telemetry data has been accepted for processing. The response contains a command for the device to execute.
+          headers:
+            'hono-command':
+              $ref: "#/components/headers/hono-command"
+            'hono-cmd-req-id':
+              $ref: "#/components/headers/hono-cmd-req-id"
+        '202':
+          description: |
+            The telemetry data has been accepted for processing. Note that if the QoS-Level request header is missing, the adapter does not guarantee successful delivery to potential consumers. However, if the QoS-Level header is set to 1 (at least once semantics), then the adapter waits for the message to be delivered and accepted by a downstream peer before responding with a 2xx status code to the device.
+        '400':
+          $ref: "#/components/responses/unprocessable"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '429':
+          $ref: "#/components/responses/too_many_requests"
+        '503':
+          $ref: "#/components/responses/internal_error"
+  /telemetry/{tenant-id}/{device-id}:
+      put:
+        tags:
+        - telemetry
+        parameters:
+        -  $ref: "#/components/parameters/tenant-id"
+        -  $ref: "#/components/parameters/device-id"
+        -  $ref: "#/components/parameters/qos-level"
+        -  $ref: "#/components/parameters/hono-ttd"
+        requestBody:
+          required: true
+          description: Arbitrary payload encoded according to the given content type.
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Data"
+            '*/*':
+              schema:
+                type: object
+        summary: Publish Telemetry Data (Gateway Mode)
+        responses:
+          '200':
+            description: |
+              The telemetry data has been accepted for processing. The response contains a command for the device to execute.
+            headers:
+              'hono-command':
+                $ref: "#/components/headers/hono-command"
+              'hono-cmd-req-id':
+                $ref: "#/components/headers/hono-cmd-req-id"
+          '202':
+            description: |
+              The telemetry data has been accepted for processing. Note that if the QoS-Level request header is missing, the adapter does not guarantee successful delivery to potential consumers. However, if the QoS-Level header is set to 1 (at least once semantics), then the adapter waits for the message to be delivered and accepted by a downstream peer before responding with a 2xx status code to the device.
+          '400':
+            $ref: "#/components/responses/unprocessable"
+          '401':
+            $ref: "#/components/responses/unauthorized"
+          '403':
+            $ref: "#/components/responses/forbidden_gw"
+          '404':
+            $ref: "#/components/responses/not_found"
+          '429':
+            $ref: "#/components/responses/too_many_requests"
+          '503':
+            $ref: "#/components/responses/internal_error"
+  /event:
+    post:
+      tags:
+        - event
+      parameters:
+        - $ref: "#/components/parameters/hono-ttd"
+      requestBody:
+        required: true
+        description: Arbitrary payload encoded according to the given content type.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          'application/vnd.eclipse-hono-empty-notification':
+            schema:
+              $ref: "#/components/schemas/EmptyNotification"
+          '*/*':
+            schema:
+              type: object
+      summary: Publish an Event
+      responses:
+        '200':
+          description: |
+            The event data has been accepted for processing. The response contains a command for the device to execute.
+          headers:
+            'hono-command':
+              $ref: "#/components/headers/hono-command"
+            'hono-cmd-req-id':
+              $ref: "#/components/headers/hono-cmd-req-id"
+        '202':
+          description: |
+            The event has been accepted and put to a persistent store for delivery to consumers.
+        '400':
+          $ref: "#/components/responses/unprocessable"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '429':
+          $ref: "#/components/responses/too_many_requests"
+        '503':
+          $ref: "#/components/responses/internal_error"
+  /event/{tenant-id}/{device-id}:
+    put:
+      tags:
+      - event
+      parameters:
+      -  $ref: "#/components/parameters/tenant-id"
+      -  $ref: "#/components/parameters/device-id"
+      -  $ref: "#/components/parameters/hono-ttd"
+      requestBody:
+        required: true
+        description: Arbitrary payload encoded according to the given content type.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          'application/vnd.eclipse-hono-empty-notification':
+            schema:
+              $ref: "#/components/schemas/EmptyNotification"
+          '*/*':
+            schema:
+              type: object
+      summary: Publish an Event (Gateway Mode)
+      responses:
+        '200':
+          description: |
+            The event has been accepted and put to a persistent store for delivery to consumers. The response contains a command for the device to execute.
+          headers:
+            'hono-command':
+              $ref: "#/components/headers/hono-command"
+            'hono-cmd-req-id':
+              $ref: "#/components/headers/hono-cmd-req-id"
+        '202':
+          description: |
+            The event has been accepted and put to a persistent store for delivery to consumers.
+        '400':
+          $ref: "#/components/responses/unprocessable"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden_gw"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '429':
+          $ref: "#/components/responses/too_many_requests"
+        '503':
+          $ref: "#/components/responses/internal_error"
+  /command/res/{commandRequestId}:
+    post:
+      tags:
+        - command
+      parameters:
+        - $ref: "#/components/parameters/commandRequestId"
+        - $ref: "#/components/parameters/hono-cmd-status-header"
+      requestBody:
+        required: false
+        description: Arbitrary data representing the result of processing the command on the device.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          '*/*':
+            schema:
+              type: object
+      summary: Sending a Response to a Command
+      responses:
+        '202':
+          description: |
+            The response has been accepted and was successfully delivered to the application.
+        '400':
+          $ref: "#/components/responses/missing_command_state"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '429':
+          $ref: "#/components/responses/too_many_requests"
+        '503':
+          $ref: "#/components/responses/cannot_process_command"
+  /command/res/{tenant-id}/{device-id}/{commandRequestId}:
+    put:
+      tags:
+        - command
+      parameters:
+        - $ref: "#/components/parameters/tenant-id"
+        - $ref: "#/components/parameters/device-id"
+        - $ref: "#/components/parameters/commandRequestId"
+        - $ref: "#/components/parameters/hono-cmd-status-header"
+      requestBody:
+        required: false
+        description: Arbitrary data representing the result of processing the command on the device.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          '*/*':
+            schema:
+              type: object
+      summary: Sending a Response to a Command (Gateway Mode)
+      description: |
+        This resource can be used by gateway components to send the response to a command on behalf of other devices which do not connect to a protocol adapter directly but instead are connected to the gateway, e.g. using some low-bandwidth radio based technology like LoRa.
+
+        In this case the credentials provided by the gateway during connection establishment with the protocol adapter are used to authenticate the gateway whereas the parameters from the URI are used to identify the device that the gateway publishes data for.
+
+        The protocol adapter checks the gateway’s authority to send responses to a command on behalf of the device implicitly by means of retrieving a registration assertion for the device from the configured Device Registration service.
+      responses:
+        '202':
+          description: |
+            The event has been accepted and put to a persistent store for delivery to consumers.
+        '400':
+          $ref: "#/components/responses/missing_command_state"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden_gw"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '429':
+          $ref: "#/components/responses/too_many_requests"
+        '503':
+          $ref: "#/components/responses/cannot_process_command"
+  /control/res/{commandRequestId}:
+    post:
+      deprecated: true
+      tags:
+        - control
+      parameters:
+        - $ref: "#/components/parameters/commandRequestId"
+        - $ref: "#/components/parameters/hono-cmd-status-header"
+      requestBody:
+        required: false
+        description: Arbitrary data representing the result of processing the command on the device.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          '*/*':
+            schema:
+              type: object
+      summary: Sending a Response to a Command
+      responses:
+        '202':
+          description: |
+            The response has been accepted and was successfully delivered to the application.
+        '400':
+          $ref: "#/components/responses/missing_command_state"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '503':
+          $ref: "#/components/responses/cannot_process_command"
+  /control/res/{tenant-id}/{device-id}/{commandRequestId}:
+    put:
+      deprecated: true
+      tags:
+        - control
+      parameters:
+        - $ref: "#/components/parameters/tenant-id"
+        - $ref: "#/components/parameters/device-id"
+        - $ref: "#/components/parameters/commandRequestId"
+        - $ref: "#/components/parameters/hono-cmd-status-header"
+      requestBody:
+        required: false
+        description: Arbitrary data representing the result of processing the command on the device.
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Data"
+          '*/*':
+            schema:
+              type: object
+      summary: Sending a Response to a Command (Gateway Mode)
+      description: |
+        This resource can be used by gateway components to send the response to a command on behalf of other devices which do not connect to a protocol adapter directly but instead are connected to the gateway, e.g. using some low-bandwidth radio based technology like LoRa.
+
+        In this case the credentials provided by the gateway during connection establishment with the protocol adapter are used to authenticate the gateway whereas the parameters from the URI are used to identify the device that the gateway publishes data for.
+
+        The protocol adapter checks the gateway’s authority to send responses to a command on behalf of the device implicitly by means of retrieving a registration assertion for the device from the configured Device Registration service.
+      responses:
+        '202':
+          description: |
+            The event has been accepted and put to a persistent store for delivery to consumers.
+        '400':
+          $ref: "#/components/responses/missing_command_state"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden_gw"
+        '404':
+          $ref: "#/components/responses/not_found"
+        '503':
+          $ref: "#/components/responses/cannot_process_command"
+components:
+  parameters:
+    tenant-id:
+      schema:
+          type: string
+      name: tenant-id
+      in: path
+      required: true
+    device-id:
+      schema:
+        type: string
+      name: device-id
+      in: path
+      required: true
+    qos-level:
+      schema:
+        type: integer
+      name: QoS-Level
+      in: header
+      required: false
+      description: The QoS level for publishing telemetry messages. Only QoS 1 is supported by the adapter.
+    commandRequestId:
+      schema:
+        type: string
+      in: path
+      required: true
+      name: commandRequestId
+      description: The unique identifier of the command. This identifier is used to correlate the device’s response to the command with the request.
+    hono-ttd:
+      schema:
+        type: integer
+      name: hono-ttd
+      in: header
+      required: false
+      description: The number of seconds the device will wait for the response. Used mainly for command and control use cases. It is also possible to set this parameter in the url as query parameter.
+    hono-cmd-status-header:
+      schema:
+        type: integer
+      name: hono-cmd-status
+      in: header
+      required: false
+      description: |
+        The status code indicating the status of the execution, must contain a valid HTTP status code.
+        It is also possible to set this parameter in the url as query parameter.
+
+  headers:
+    hono-command:
+      description: The name of the command to execute.
+      schema:
+        type: string
+    hono-cmd-req-id:
+      description: An identifier that the device must include in its response to a command. This header will only be present if the response contains a request/response command to be executed by the device.
+      schema:
+        type: string
+  responses:
+    unprocessable:
+      description: |
+        The request cannot be processed because the content type header is missing or the request body is empty.
+    unauthorized:
+      description: |
+        The request cannot be processed because the request does not contain valid credentials.
+    forbidden:
+      description: |
+        The request cannot be processed because the device's registration status cannot be asserted. Possible reasons for this might be:
+
+        * The given tenant is not allowed to use this protocol adapter.
+        * The given device does not belong to the given tenant.
+        * The gateway associated with the device is not registered or disabled.
+    forbidden_gw:
+      description: |
+        The request cannot be processed because the device's registration status cannot be asserted. Possible reasons for this might be:
+
+        * The given tenant is not allowed to use this protocol adapter.
+        * The given device does not belong to the given tenant.
+        * The gateway associated with the device is not registered or disabled.
+        * The gateway is not authorized to act on behalf of the device.
+    missing_command_state:
+      description: |
+        The request cannot be processed because the command status is missing.
+    not_found:
+      description: |
+        The request cannot be processed because the device is not registered or disabled.
+    internal_error:
+      description: |
+        The request cannot be processed because there is no consumer of telemetry data for the given tenant connected to Bosch IoT Hub.
+    cannot_process_command:
+      description: |
+        The request cannot be processed. Possible reasons for this include:
+        * There is no application listening for a reply to the given commandRequestId.
+        * The application has already given up on waiting for a response.
+    too_many_requests:
+      description: |
+        The request cannot be processed because the tenant’s message limit for the current period is exceeded.
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Data:
+      description: |
+        Data that is send as Telemetry or Event message to the Bosch IoT Hub. May contain arbitrary content-type and data.
+      properties:
+        temp:
+          type: string
+          example: "5"
+    EmptyNotification:
+      description: |
+        An empty notification can be used to indicate to a Business Application that a device is currently ready to receive an upstream message by setting the ttd property.
+        The application receiving the notification can verify if the notification is not expired and then may decide to send an upstream message to the device.
+        An event of this type does not have any payload so the body of the event MUST be empty.
+      example: ""
+      default: ""
+      nullable: true
+      maxLength: 0
+
+tags:
+- name: telemetry
+  description: Publish Telemetry data to the Bosch IoT Hub
+- name: event
+  description: Publish Event data to the Bosch IoT Hub
+- name: command
+  description: Send responses to previously received request/response commands to the Bosch IoT Hub
+- name: control
+  description: | 
+    Send responses to previously received request/response commands to the Bosch IoT Hub. Previous versions of Bosch 
+    IoT Hub used control instead of command as path. Using the control path is still supported but deprecated. The deprecated 
+    endpoints will be supported by Bosch IoT Hub until the end of February 2020.
+
+security:
+  - basicAuth: []

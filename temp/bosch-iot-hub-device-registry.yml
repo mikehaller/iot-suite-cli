@@ -1,0 +1,469 @@
+openapi: 3.0.0
+info:
+  version: 1.0.2
+  title: Bosch IoT Hub - Device Registry
+  description: 'The Device Registration API is used to register new devices, update existing devices, and can be used by other services to assert a device’s registration status, e.g. if it is enabled and if it is registered with a particular tenant.'
+servers:
+  - url: 'https://manage.bosch-iot-hub.com/'
+paths:
+  '/registration/{tenant-id}':
+    parameters:
+      - schema:
+          type: string
+        name: tenant-id
+        in: path
+        required: true
+    post:
+      tags:
+        - devices
+      summary: Register a device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+          application/vnd.bosch-iot-suite.v1+json:
+            schema:
+              $ref: '#/components/schemas/DeviceSuite'
+      responses:
+        '201':
+          description: |
+            Device has been registered successfully under resource indicated by Location header.
+          headers:
+            Location:
+              description: Contains the resource path created for the device
+              schema:
+                type: string
+        '400':
+          description: |
+            Device has not been registered because the request was malformed, e.g. a required header is missing. The body may contain hints regarding the problem.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '402':
+          description: |
+            Service plan limits are exceeded. The body may contain further information regarding the exceeded resources.
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            Device has not been registered because the corresponding tenant was not found.
+        '409':
+          description: |
+            There already exists a device with the given ID. The request has not been processed.
+    get:
+      tags:
+        - devices
+      summary: Retrieve registration data for all devices.
+      description: |
+        Retrieve registration data for all devices. The results are paged with 25 devices per page.
+        To access the next page use the _skip_ parameter described below.
+      parameters:
+        - name: skip
+          in: query
+          description: Specify the number of devices to be skipped when listing all devices.
+            For example to show the second page of devices set to 25.
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: q
+          in: query
+          description: Specify a search string for devices. All devices starting with this string will be shown.
+            For example "my-device" will list all devices starting with this string (e.g. my-device-1, my-device-2, ...)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |
+            Successfully retrieved device data from Bosch IoT Hub.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Device'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+  '/registration/{tenant-id}/{device-id}':
+    parameters:
+      - schema:
+          type: string
+        name: tenant-id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: device-id
+        in: path
+        required: true
+    get:
+      tags:
+        - devices
+      summary: Retrieve registration data for a device.
+      responses:
+        '200':
+          description: |
+            Successfully retrieved device data from Bosch IoT Hub.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            Device with given device-id does not exist.
+    put:
+      tags:
+        - devices
+      summary: Update a device identified by endpoint or device-id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        '204':
+          description: |
+            Registered device was updated with the given values.
+        '400':
+          description: |
+            Device registration has not been updated because the request
+            was malformed, e.g. a required header is missing
+            (the body may contain hints regarding the problem).
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: No device with the given identifier is registered for the given tenant.
+    delete:
+      tags:
+        - devices
+      summary: Deregister a device identified by device-id.
+      responses:
+        '204':
+          description: Successfully removed the given device.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            No device with the given identifier is registered for
+            the given tenant.
+  '/credentials/{tenant-id}':
+    summary: 'The Device Credentials API is used to register new device credentials, update existing credentials, and can be used by other services to get current device credentials to assert a device connection.'
+    parameters:
+      - schema:
+          type: string
+        name: tenant-id
+        in: path
+        required: true
+    post:
+      tags:
+        - credentials
+      summary: Add new credentials for a device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credential'
+          application/vnd.bosch-iot-suite.v1+json:
+            schema:
+              $ref: '#/components/schemas/CredentialSuite'
+      responses:
+        '201':
+          description: Credentials have been added successfully. If accept header and content-type header `application/vnd.bosch-iot-suite.v1+json` are set response with payload gets returned, empty response payload otherwise.
+          headers:
+            Location:
+              description: Contains the resource path created for the credentials
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                description: Does not return any payload
+            application/vnd.bosch-iot-suite.v1+json:
+              schema:
+                $ref: '#/components/schemas/CredentialSuiteResponse'
+        '400':
+          description: |
+            Credentials have not been added because the request was
+            malformed, e.g. a required header is missing. The body may contain
+            hints regarding the problem.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            The tenant with the given id was not found, therefore the credentials could not be added.
+        '409':
+          description: |
+            There are already existing credentials with the given auth-id and type.
+            The request has not been processed.
+    get:
+      tags:
+        - credentials
+      summary: Get credentials based on its type and auth-id.
+      parameters:
+        - schema:
+            type: string
+          name: auth-id
+          description: |
+            Get the credentials of the given _auth-id_ and _type_.
+            **Note:** If set the _type_ parameter must also be set.
+          in: query
+          required: false
+        - schema:
+            type: string
+          name: type
+          description: |
+            Get the credentials of the given _auth-id_ and _type_.
+            **Note:** If set the _auth-id_ parameter must also be set.
+          in: query
+          required: false
+        - schema:
+            type: string
+          name: device-id
+          description: |
+            Get all credentials of a device with the given _device-id_.
+          in: query
+          required: false
+      responses:
+        '200':
+          description: |
+            Successfully retrieved credential data from Bosch IoT Hub.
+          content:
+            application/json:
+              example:
+                device-id: '4711'
+                type: hashed-password
+                auth-id: little-sensor
+                enabled: true
+                secrets:
+                  - password: plaintextPassword
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Credential'
+                  - $ref: '#/components/schemas/Credentials'
+        '400':
+          description: |
+            Query parameters are missing. Valid parameters are:
+            * _auth-id_ and _type_
+            * _device-id_
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            No credential with the given auth-id and type is available for
+            the given tenant.
+    put:
+      tags:
+        - credentials
+      summary: Update the credentials for the given type and auth-id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credential'
+      responses:
+        '204':
+          description: |
+            Credentials were updated with the given values.
+        '400':
+          description: |
+            Credentials have not been updated because the request
+            was malformed, e.g. a required header is missing
+            (the body may contain hints regarding the problem).
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            No Credentials with the given auth-id and type were found for the
+            given tenant.
+        '412':
+          description: |
+            Credentials have not been modified because of a precondition fail.
+            Make sure the device exists.
+    delete:
+      operationId: delete_credentials
+      tags:
+        - credentials
+      summary: Delete the credentials identified by its type and auth-id.
+      parameters:
+        - schema:
+            type: string
+          name: auth-id
+          in: query
+          required: true
+        - schema:
+            type: string
+          name: type
+          in: query
+          required: true
+      responses:
+        '204':
+          description: |
+            Successfully removed the given credentials.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          description: |
+            No credentials with the given auth-id and type are available for
+            the given tenant.
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        A JSON Web Token issued by Suite Auth.
+  responses:
+    unauthorized:
+      description: |
+        The request cannot be processed because the request does not contain valid credentials.
+    forbidden:
+      description: |
+        Insufficient permissions or quota limit exceeded. The body may contain hints regarding the problem.
+  schemas:
+    Device:
+      description: |
+        Defines a device that connects to the Bosch IoT Hub. In addition the the mandatory fields, arbitrary custom properties can be added.
+      required:
+        - device-id
+        - enabled
+      properties:
+        device-id:
+          type: string
+          example: '4711'
+        enabled:
+          type: boolean
+        via:
+          description: |
+            Gateway device or devices that are allowed to send messages on behalf of the device.
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        defaults:
+          description: |
+            Default values to be used by protocol adapters for augmenting messages from devices with missing information like a content type.
+            It is up to the discretion of a protocol adapter if and how to use the given default values when processing messages published by the device.
+            It is possible to add custom properties, these will be added to each message as application properties.
+          type: object
+          properties:
+            content-type:
+              type: string
+              description: |
+                The content-type to use for northbound messages published by this device.
+                This can be useful for protocols like MQTT where the content-type cannot be set directly in a message.
+                The content-type is specified in RFC-2046.
+
+                Example value: 'application/json'
+            content-encoding:
+              type: string
+              description: |
+                The content-encoding can be set optionally in addition to the content-type.
+                It defines what additional content encodings have to be applied to the message content to receive the media-type referenced by the content-type.
+                The main usage of the content-encoding is to allow compression without losing information about the compressed data type.
+                The content-encoding is specified in section 3.5 of RFC 2616.
+            ttl:
+              type: integer
+              description: |
+                The time-to-live (in seconds) to use for events published by this device.
+                This value is limited by the booked service plans event storage time.
+      example:
+        device-id: '4711'
+        enabled: true
+    DeviceSuite:
+      description: |
+        Defines a device that connects to the Bosch IoT Hub. In addition the the mandatory fields, arbitrary custom properties can be added.
+        Payload is in Bosch IoT Suite format, i.e. attributes use camel case notation.
+      required:
+        - deviceId
+        - enabled
+      properties:
+        deviceId:
+          type: string
+          example: '4711'
+        enabled:
+          type: boolean
+        via:
+          description: |
+            Gateway device or devices that are allowed to send messages on behalf of the device.
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+        defaults:
+          description: |
+            Default values to be used by protocol adapters for augmenting messages from devices with missing information like a content type.
+            It is up to the discretion of a protocol adapter if and how to use the given default values when processing messages published by the device.
+            It is possible to add custom properties, these will be added to each message as application properties.
+          type: object
+          properties:
+            contentType:
+              type: string
+              description: |
+                The content-type to use for northbound messages published by this device.
+                This can be useful for protocols like MQTT where the content-type cannot be set directly in a message.
+                The content-type is specified in RFC-2046.
+
+                Example value: 'application/json'
+            contentEncoding:
+              type: string
+              description: |
+                The content-encoding can be set optionally in addition to the content-type.
+                It defines what additional content encodings have to be applied to the message content to receive the media-type referenced by the content-type. The main usage of the content-encoding is to allow compression without losing information about the compressed data type. The content-encoding is specified in section 3.5 of RFC 2616.
+            ttl:
+              type: integer
+              description: |
+                The time-to-live (in seconds) to use for events published by this device. This value is limited by the booked service plans event storage time.
+      example:
+        deviceId: '4711'
+        enabled: true
+    Credential:
+      $ref: ../schema/credential.schema.json
+    Credentials:
+      properties:
+        total:
+          type: integer
+          format: int64
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/Credential'
+    CredentialSuite:
+      $ref: ../schema/credential-suite.schema.json
+    CredentialSuiteResponse:
+      $ref: ../schema/credential-suite-response.schema.json
+tags:
+  - name: devices
+    description: Manage devices
+  - name: credentials
+    description: Manage credentials
+security:
+  - basicAuth: []
+  - bearerAuth: []

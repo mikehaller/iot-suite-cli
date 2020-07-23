@@ -36,8 +36,8 @@ A command line tool for Bosch IoT Suite.
     sort: name
     verbose: false
   
-  Please note that the scope needs to be URL Encoded already, so instead of white spaces, use the
-  encoded entities such as %20 etc.
+  Please note that the scope must not be URL Encoded. If you have multiple scopes, use a space as delimiter. On the 
+  command line using the `--scope` option, you may need to use quotes if you have multiple scopes.
   
 ## Functionality
   

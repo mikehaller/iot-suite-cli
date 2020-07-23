@@ -1,0 +1,351 @@
+openapi: "3.0.0"
+info:
+  version: "1"
+  title:  Bosch IoT Suite - Device Provisioning
+  description: |
+    The Device Provisioning API is used to provision new devices for the Bosch IoT Suite services. It simplifies
+    provisioning by registering the device in all affected services with a single API call.
+
+    Currently the Bosch IoT Hub and Bosch IoT Things service are supported.
+    The following entities can be provisioned:
+    * **Device** (Bosch IoT Hub): The Bosch IoT Hub has to be made aware of the Device which will connect to it and send
+    telemetry data.
+    * **Credentials** (Bosch IoT Hub): Credentials are required to authenticate Devices which want to connect. If
+    Devices connect via a gateway, only credentials for the gateway are required. Hence, Credentials are optional in
+    the Device Provisioning API.
+    * **Thing** (Bosch IoT Things): A Thing is a *Digital Twin*: Among other things, it stores the state of the
+    Device and provides an API for it, which is also called *Device-as-a-Service*. [Vorto models](https://vorto.eclipse.org) can be used to define
+    the capabilities of a Thing.
+    * **Policy** (Bosch IoT Things): Each Thing must have a reference (`policyId`) to a Policy which defines its access
+     control. You can decide to create a specific Policy for each Thing or to re-use a Policy for multiple Things.
+
+    Authentication and authorization of the Device Provisioning API is based on *Suite Auth* access tokens. You have
+    to create a Suite Auth access token which provides full access to the Bosch IoT Hub and Bosch IoT
+    Things service instances you want to address and provide it as *Bearer Authorization*.
+
+    **Note**: If you are using the Asset communication package hybrid offering please use the following server:
+    - https://deviceprovisioning.eu-h1.bosch-iot-suite.com/api/1
+servers:
+  - url: "https://deviceprovisioning.eu-1.bosch-iot-suite.com/api/1"
+  - url: "https://deviceprovisioning.eu-h1.bosch-iot-suite.com/api/1"
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: provisioning
+    description: Provision devices
+  - name: de-provisioning
+    description: De-provisioning devices
+
+paths:
+  '/{service-instance-id}/devices':
+    parameters:
+      - in: path
+        required: true
+        name: service-instance-id
+        schema:
+          type: string
+        description: |
+          The ID of the Bosch IoT Suite for Asset Communication subscription for which you want to provision a device.
+          Not the IDs of the underlying Bosch IoT Hub or Bosch IoT Things service instance.
+    post:
+      tags:
+        - provisioning
+      summary: |
+        Provision a device: Creates the required resources in the underlying Bosch IoT Suite services.
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/ProvisioningRequestPayload"
+      parameters:
+        - in: query
+          required: false
+          name: authScope
+          schema:
+            type: string
+          description: |
+            Controls who owns the newly created Thing (i.e. which subject is used for the default entry of the created
+            Policy). If this parameter is omitted the authenticated subject of the user who made the request is used
+            (Things default).
+
+            Supported scopes:
+            * `subscription`: full access is granted to all users who have access to the same IoT Suite subscription
+        - in: query
+          required: false
+          name: skipVorto
+          schema:
+              type: boolean
+          description: |
+            If set to true, the resolution of the Vorto model from the definition field of the Thing will not be attempted.
+      responses:
+        '201':
+          description: |
+            The device has been successfully provisioned.
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ProvisioningResponsePayload"
+        '400':
+          description: |
+            The device could not be provisioned because the request was malformed, e.g. it does not contain valid JSON.
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Provisioning400ErrorPayload"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '409':
+          description: |
+            A device with the given ID has already been provisioned for at least one of the services or the requests
+            contains provisioning information for some service which has an ID not matching the one specified in the
+            field `ProvisioningRequestPayload#id`. The body may contains hints regarding the problem.
+
+  '/{service-instance-id}/devices/{device-id}':
+    parameters:
+      - in: path
+        required: true
+        name: service-instance-id
+        schema:
+          type: string
+        description: |
+          The ID of the Bosch IoT Suite for Asset Communication subscription for which you want to de-provision a device.
+          Not the IDs of the underlying Bosch IoT Hub or Bosch IoT Things service instance.
+      - in: path
+        required: true
+        name: device-id
+        schema:
+          type: string
+        description: The ID of the device you want to de-provision
+      - in: query
+        required: false
+        name: keepCredentials
+        schema:
+          type: boolean
+        description: Pass 'true' if you wish to keep the device's credentials
+        default: false
+      - in: query
+        required: false
+        name: keepPolicy
+        schema:
+          type: boolean
+        description: Pass 'true' if you wish to keep the thing's policy
+        default: false
+    delete:
+      tags:
+        - de-provisioning
+      summary: |
+        De-provisioning a device: Deletes the device, thing, policy and credentials by ID in the underlying Bosch IoT Suite
+        services.
+      responses:
+        '200':
+          description: |
+            The device has been successfully de-provisioned.
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/DeprovisioningResponsePayload"
+        '401':
+          $ref: "#/components/responses/unauthorized"
+        '403':
+          $ref: "#/components/responses/forbidden"
+        '404':
+          $ref: "#/components/responses/notFound"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        A JSON Web Token issued by Suite Auth.
+
+  responses:
+    unauthorized:
+      description: |
+        The request cannot be processed because the request does not contain valid credentials.
+    forbidden:
+      description: |
+        Insufficient permissions.
+    notFound:
+      description: |
+        At least one of the underlying resources could not be found.
+
+  schemas:
+    ProvisioningRequestPayload:
+      description: |
+        Defines the structure of a provisioning request.
+      required:
+        - id
+        - hub
+        - things
+      properties:
+        id:
+          type: string
+        hub:
+          $ref: '#/components/schemas/HubResources'
+        things:
+          $ref: '#/components/schemas/ThingsResources'
+      example:
+        id:
+          "com.bosch.example:my-device-4711"
+        hub:
+          device:
+            enabled:
+              true
+          credentials:
+            type: "hashed-password"
+            secrets:
+              [password: "yourPassword"]
+        things:
+          thing:
+            attributes:
+              manufacturer: "Robert Bosch GmbH"
+    ProvisioningResponsePayload:
+      description: |
+        Defines the structure of a provisioning response.
+      properties:
+        id:
+          type: string
+        hub:
+          $ref: '#/components/schemas/HubResponse'
+        things:
+          $ref: '#/components/schemas/ThingsResources'
+      example:
+        id:
+          "com.bosch.example:my-device-4711"
+        hub:
+          device:
+            enabled:
+              true
+            deviceId:
+              "com.bosch.example:my-device-4711"
+          credentials:
+            tenantId: "tmytenant_hub"
+            deviceId: "com.bosch.example:my-device-4711"
+            authId: "com.bosch.example_my-device-4711"
+            type: "hashed-password"
+            secrets:
+              [password: "yourPassword"]
+            adapters:
+              - type: "http"
+                uri: "https://http.bosch-iot-hub.com"
+                host: "http.bosch-iot-hub.com"
+                port: 443
+              - type: "gateway-software"
+                uri: "https://gateway-software.bosch-iot-hub.com/httptrprt"
+                host: "gateway-software.bosch-iot-hub.com"
+                port: 443
+              - type: "mqtt"
+                uri: "mqtts://mqtt.bosch-iot-hub.com"
+                host: "mqtt.bosch-iot-hub.com"
+                port: 8883
+        things:
+          thing:
+            attributes:
+              manufacturer: "Robert Bosch GmbH"
+    Provisioning400ErrorPayload:
+      properties:
+        description:
+          type: string
+          description: |
+            A message describing the cause.
+        errorDetails:
+          type: object
+          description: |
+            An arbitrary JSON object representing the error.
+    HubResources:
+      description: |
+        Data structure holding provisioning information for Bosch IoT Hub.
+      required:
+        - device
+      properties:
+        device:
+          $ref: 'registration-suite.schema.json'
+        credentials:
+          $ref: 'credential-suite.schema.json'
+    HubResponse:
+      properties:
+        device:
+          $ref: 'registration-suite.schema.json'
+        credentials:
+          $ref: 'credential-suite-response.schema.json'
+    ThingsResources:
+      description: |
+        Data structure holding provisioning information for Bosch IoT Things.
+      required:
+        - thing
+      properties:
+        thing:
+          $ref: '#/components/schemas/ThingsThing'
+    ThingsThing:
+      type: object
+      description: |
+        Data structure for creating a Thing in Bosch IoT Things.
+        For details, see `Create a new Thing` at the [Bosch IoT Things Http API Documentation](https://apidocs.bosch-iot-suite.com/index.html?urls.primaryName=Bosch%20IoT%20Things%20-%20API%20v2).
+        Note that in contrast to direct usage of the Things API, the `id` will not be generated, but will be set to
+        the one specified in the request's ProvisioningRequestPayload. If set, it must match the one from the request's ProvisioningRequestPayload.
+        Note that a Vorto model can be used to to define the capabilities of a Thing. To include the capabilities of a Vorto model, the fully qualified name (in the form namespace:name:version) of the model must be
+        set in the 'definition' field of the Thing. The model is then retrieved from the official Eclipse Vorto repository and its capabilities are automatically added to the Thing.
+        Note that each Thing requires a Policy which defines its access control. You can specify the Policy for a
+        Thing in three different ways:
+         * use a generated Policy (recommended): per default, the Device Provisioning Service creates a Policy for
+         you (which covers standard usage scenarios)
+         * use an existing Policy: specify `policyId` appropriately
+         * define your own Policy: define the Policy as an Inline-Policy (field `_policy`)
+
+        The generated Policy contains two entries:
+         * `DEFAULT`: Defines access for the Provisioner (the one who provisions the device with this API). It
+         provides full `READ` and `WRITE` access to the Thing, Messages and the Policy itself.
+         * `DEVICE`: Defines access control for the connectivity of the device. It provides full `READ` and `WRITE`
+         access to the Thing and Messages, but not to the Policy itself.
+
+        ```
+        {
+          "policyId": "<<provisioningRequestPayload.id>>",
+          "entries": {
+              "DEFAULT": {
+                "subjects": {
+                  "{{ request:subjectId }}": { "type": "suite-auth" }
+                },
+                "resources": {
+                  "thing:/":   { "grant": ["READ", "WRITE"], "revoke": [] },
+                  "message:/": { "grant": ["READ", "WRITE"], "revoke": [] },
+                  "policy:/":  { "grant": ["READ", "WRITE"], "revoke": [] }
+                }
+              },
+              "DEVICE": {
+                "subjects": {
+                  "integration:{{ request:solutionId }}:hub": {
+                    "type": "iot-things-integration"
+                  }
+                },
+                "resources": {
+                  "thing:/":   { "grant": ["READ", "WRITE"], "revoke": [] },
+                  "message:/": { "grant": ["READ", "WRITE"], "revoke": [] }
+                }
+              }
+          }
+        }
+        ```
+    DeprovisioningResponsePayload:
+      properties:
+        device:
+          type: string
+          description: |
+            A message describing the result of deleting the device resource.
+        credentials:
+          type: string
+          description: |
+            A message describing the result of deleting the credentials resource.
+        thing:
+          type: string
+          description: |
+            A message describing the result of deleting the thing resource.
+        policy:
+          type: string
+          description: |
+            A message describing the result of deleting the policy resource.
