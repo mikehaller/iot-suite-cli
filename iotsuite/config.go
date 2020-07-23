@@ -30,6 +30,7 @@ func configDefaults() {
         fmt.Println("\t tasks \t List tasks ")
         fmt.Println("\t devices \t List devices")
         fmt.Println("\t groups \t List device groups")
+        fmt.Println("\t targets \t List targets")
         fmt.Println()
         fmt.Println("See '"+os.Args[0]+" <command> -help' to read about specific subcommands and options.")
         fmt.Println()

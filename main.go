@@ -57,6 +57,8 @@ func main() {
 		iotsuite.IotmgrTasks(iotsuite.InitOAuth(conf), conf)
 	case "groups":
 		iotsuite.IotmgrGroups(iotsuite.InitOAuth(conf), conf)
+	case "targets":
+		iotsuite.RolloutsTargets(iotsuite.InitOAuth(conf), conf)
 	default:
 		fmt.Println("Unknown command:", os.Args[1])
 	}
