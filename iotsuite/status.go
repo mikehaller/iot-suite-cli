@@ -10,6 +10,7 @@ import (
 	"strings"
 	"encoding/json"
 	"net/http"
+	"github.com/fatih/color"
 )
 
 // STATUS.BOSCH-IOT-SUITE.COM JSON
