@@ -25,6 +25,9 @@ type Configuration struct {
 	ClientId     string `yaml:"clientId"`
 	ClientSecret string `yaml:"clientSecret"`
 	Scope        string `yaml:"scope"`
+	ThingsApiToken string `yaml:"thingsApiToken"`
+	ThingsSolutionId string `yaml:"solutionId"`
+	ThingsSolutionPolicyId string `yaml:"solutionPolicyId"`
 	NoColor        bool `yaml:"nocolor"`
 }
 

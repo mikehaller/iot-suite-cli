@@ -10,7 +10,8 @@ func init() {
 	rootCmd.AddCommand(thingsCmd)
 	thingsCmd.AddCommand(searchCmd)
 	thingsCmd.AddCommand(countCmd)
-	thingsCmd.AddCommand(solutionsCmd)
+	thingsCmd.AddCommand(solutionCmd)
+	thingsCmd.AddCommand(connectionsCmd)
 
 	searchCmd.Flags().String("filter", "", "Filter query")
 	viper.BindPFlag("filter", searchCmd.Flags().Lookup("filter"))
@@ -31,9 +32,8 @@ func init() {
 	countCmd.Flags().String("namespaces", "", "Limit search to list of comma-separated namespaces")
 	viper.BindPFlag("namespaces", countCmd.Flags().Lookup("namespaces"))
 	
-	
-	solutionsCmd.Flags().String("solutionId", "", "The Solution Id aka Service Instance ID")
-	viper.BindPFlag("solutionId", solutionsCmd.Flags().Lookup("solutionId"))
+	thingsCmd.PersistentFlags().String("solutionId", "", "The Solution Id aka Service Instance ID")
+	viper.BindPFlag("solutionId", thingsCmd.PersistentFlags().Lookup("solutionId"))
 }
 
 var thingsCmd = &cobra.Command{
@@ -64,13 +64,24 @@ var searchCmd = &cobra.Command{
 	},
 }
 
-var solutionsCmd = &cobra.Command{
+var solutionCmd = &cobra.Command{
 	Use:   "solution",
 	Short: "Show the configuration of a Solution",
 	Long:  `Retrieves and displays the configuration of a Bosch IoT Things Solution`,
 	Run: func(cmd *cobra.Command, args []string) {
 		conf := iotsuite.ReadConfig()
 		httpclient := iotsuite.InitOAuth(conf)
-		iotsuite.ThingsSolutions(httpclient, viper.GetString("solutionId"))
+		iotsuite.ThingsSolution(conf, httpclient, viper.GetString("solutionId"))
+	},
+}
+
+var connectionsCmd = &cobra.Command{
+	Use:   "connections",
+	Short: "Show connections",
+	Long:  `Shows a list of all configured connections`,
+	Run: func(cmd *cobra.Command, args []string) {
+		conf := iotsuite.ReadConfig()
+		httpclient := iotsuite.InitOAuth(conf)
+		iotsuite.ThingsConnections(conf, httpclient, viper.GetString("solutionId"))
 	},
 }

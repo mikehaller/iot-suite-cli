@@ -12,13 +12,36 @@ import (
 
 func dump(responseData []byte) {
 	var obj map[string]interface{}
-	json.Unmarshal([]byte(responseData), &obj)
-	// Make a custom formatter with indent set
-	f := colorjson.NewFormatter()
-	f.Indent = 4
-	// Marshall the Colorized JSON
-	s, _ := f.Marshal(obj)
-	fmt.Println(string(s))
+	var err = json.Unmarshal([]byte(responseData), &obj)
+	if err != nil {
+		var decoded []interface{}
+		err = json.Unmarshal([]byte(responseData), &decoded)
+		if err != nil {
+			// Root is neither Object nor Array, assume primitive value.
+			fmt.Println(string(responseData))
+		} else {
+			// Make a custom formatter with indent set
+			f := colorjson.NewFormatter()
+			f.Indent = 4
+			// Marshall the Colorized JSON
+			s, err := f.Marshal(decoded)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(string(s))
+		}
+	} else {
+		// Make a custom formatter with indent set
+		f := colorjson.NewFormatter()
+		f.Indent = 4
+		// Marshall the Colorized JSON
+		s, err := f.Marshal(obj)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(string(s))
+	}
 }
 
 func DumpJsonRequest(req *http.Request) {
