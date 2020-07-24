@@ -8,3 +8,4 @@ scope: "service:iot-hub-prod:t0262c358aab544399b78b4811bfd862b_hub/full-access s
 sort: name
 verbose: false
 solutionId: "0262c358-aab5-4439-9b78-b4811bfd862b_things"
+nocolor: false

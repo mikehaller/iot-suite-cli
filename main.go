@@ -14,10 +14,14 @@ var (
 )
 
 func main() {
-	fmt.Println("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.")
-	fmt.Println()
-	
 	conf = iotsuite.ReadConfig()
+	if conf.NoColor {
+		color.NoColor = true
+	}
+
+	color.Cyan("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.")
+	fmt.Println()
+
 	cmd.Execute()
 	
 	fmt.Println()

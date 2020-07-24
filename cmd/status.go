@@ -9,6 +9,8 @@ import (
 var (
 	Region string
 	Sort   string
+	Watch bool
+	Waittime int
 )
 
 var statusCmd = &cobra.Command{
@@ -16,7 +18,7 @@ var statusCmd = &cobra.Command{
 	Short: "Shows service health status",
 	Long:  `Shows an overview of the current cloud service health status, whether they are up and OPERATIONAL`,
 	Run: func(cmd *cobra.Command, args []string) {
-		iotsuite.ShowServiceStatusHealth(Region, Sort, false)
+		iotsuite.ShowServiceStatusHealth(Region, Sort, viper.GetBool("verbose"), Watch, Waittime)
 	},
 }
 
@@ -26,6 +28,12 @@ func init() {
 
 	statusCmd.Flags().StringVarP(&Sort, "sort", "s", "name", "Sort the list by service name")
 	viper.BindPFlag("sort", statusCmd.Flags().Lookup("sort"))
+	
+	statusCmd.Flags().BoolVarP(&Watch, "watch", "w", false, "Continously watch the status in an endless loop")
+	viper.BindPFlag("watch", statusCmd.Flags().Lookup("watch"))
+	
+	statusCmd.Flags().IntVarP(&Waittime, "time", "t", 30, "Number of seconds to wait between calls (between 5 and 600)")
+	viper.BindPFlag("time", statusCmd.Flags().Lookup("time"))
 
 	rootCmd.AddCommand(statusCmd)
 }

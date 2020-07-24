@@ -17,6 +17,7 @@ func configDefaults() {
 	viper.SetDefault("clientId", "")
 	viper.SetDefault("clientSecret", "")
 	viper.SetDefault("scope", "")
+	viper.SetDefault("nocolor", "false")
 }
 
 type Configuration struct {
@@ -24,6 +25,7 @@ type Configuration struct {
 	ClientId     string `yaml:"clientId"`
 	ClientSecret string `yaml:"clientSecret"`
 	Scope        string `yaml:"scope"`
+	NoColor        bool `yaml:"nocolor"`
 }
 
 func ReadConfig() *Configuration {
