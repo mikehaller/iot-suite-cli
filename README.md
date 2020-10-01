@@ -2,14 +2,6 @@
 
 A command line tool for Bosch IoT Suite.
 
-## Building
-
-1. Prerequisite: Install Go from [https://golang.org/](https://golang.org/)
-2. Clone the Git repository `git clone https://github.com/mikehaller/iot-suite-cli`
-3. Install necessary dependencies with `go get -v iot-suite-cli`
-4. Build the binary with `go build iot-suite-cli`
-5. Run the binary with `iot-suite-cli.exe` 
- 
 ## Run application (Windows)
 
   Running `iot-suite-cli.exe` on the Command Line (cmd.exe) will display a short help screen
@@ -51,3 +43,12 @@ A command line tool for Bosch IoT Suite.
  
   ![iot-suite-cli status](hello.png)
 
+
+## Building
+
+1. Prerequisite: Install Go from [https://golang.org/](https://golang.org/)
+2. Clone the Git repository `git clone https://github.com/mikehaller/iot-suite-cli`
+3. Install necessary dependencies with `go get -v .`
+4. Build the binary with `go build .`
+5. Run the binary with `iot-suite-cli.exe` 
+ 

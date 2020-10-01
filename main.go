@@ -10,6 +10,10 @@ import (
 )
 
 var (
+	AppVersion = "v0.0.1" 
+)
+
+var (
 	conf *iotsuite.Configuration
 )
 
@@ -19,7 +23,7 @@ func main() {
 		color.NoColor = true
 	}
 
-	color.Cyan("Bosch IoT Suite CLI v0.1\nCopyright (c) Bosch.IO GmbH, All right reserved.")
+	color.Cyan("Bosch IoT Suite CLI "+AppVersion+"\nCopyright (c) Bosch.IO GmbH, All right reserved.")
 	fmt.Println()
 
 	cmd.Execute()

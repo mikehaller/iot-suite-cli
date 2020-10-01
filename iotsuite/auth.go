@@ -36,8 +36,17 @@ grant_type=client_credentials
 
 */
 
-func err() {
-	fmt.Println("You need to specify all three OAuth2 client parameters: clientId, clientSecret and scope")
+func err(conf *Configuration) {
+	fmt.Println("You need to specify all necessary OAuth2 client configuration parameters:")
+	if (conf.ClientId=="") {
+		fmt.Println("clientId is missing.")
+	}
+	if (conf.ClientSecret=="") {
+		fmt.Println("clientSecret is missing.")
+	}
+	if (conf.Scope=="") {
+		fmt.Println("scope is missing.")
+	}
 	fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/")
 	os.Exit(2)
 }
@@ -55,7 +64,7 @@ func Authorize(conf *Configuration) string {
 	var scope = conf.Scope
 
 	if clientId == "" || clientSecret == "" || scope == "" {
-		err()
+		err(conf)
 	}
 
 	response, err := http.PostForm("https://access.bosch-iot-suite.com/token",
@@ -84,6 +93,8 @@ func Authorize(conf *Configuration) string {
 		fmt.Println(string(s))
 
 		os.Exit(3)
+	} else {
+		fmt.Println("#authorized ok")
 	}
 
 	if err != nil {

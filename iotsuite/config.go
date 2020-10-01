@@ -18,6 +18,8 @@ func configDefaults() {
 	viper.SetDefault("clientSecret", "")
 	viper.SetDefault("scope", "")
 	viper.SetDefault("nocolor", "false")
+	viper.SetDefault("baseUrl", "https://accounts.bosch-iot-suite.com")
+	viper.SetDefault("tokenUrl", "https://access.bosch-iot-suite.com/token")
 }
 
 type Configuration struct {
@@ -29,6 +31,8 @@ type Configuration struct {
 	ThingsSolutionId string `yaml:"solutionId"`
 	ThingsSolutionPolicyId string `yaml:"solutionPolicyId"`
 	NoColor        bool `yaml:"nocolor"`
+	BaseUrl        string `yaml:"baseUrl"`
+	TokenUrl        string `yaml:"tokenUrl"`
 }
 
 func ReadConfig() *Configuration {
