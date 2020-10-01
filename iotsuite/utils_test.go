@@ -6,5 +6,8 @@ import (
 
 func TestMainHelp(t *testing.T) {
     Hello("testing")
-    //  t.Errorf("Sum was incorrect, got: %d, want: %d.", total, 10)
+}
+
+func TestExpectedToFail(t *testing.T) {
+//     t.Errorf("Sum was incorrect, got: %d, want: %d.", 1, 2)
 }

@@ -51,4 +51,15 @@ A command line tool for Bosch IoT Suite.
 3. Install necessary dependencies with `go get -v .`
 4. Build the binary with `go build .`
 5. Run the binary with `iot-suite-cli.exe` 
- 
+
+### Cross-Platform Build on Linux
+
+1. `env GOOS=linux GOARCH=amd64 go build -o iot-suite-cli-amd64 .`
+2. `env GOOS=linux GOARCH=arm go build -o iot-suite-cli-arm .`
+3. `env GOOS=windows GOARCH=arm64 go build -o iot-suite-cli-win.exe .`
+
+### Cross-Platform Build on Windows
+
+1. `set GOOS=linux` or `set GOOS=windows`
+2. `set GOARCH=amd64` or `set GOARCH=arm`
+3. `go build -o iot-suite-cli-win.exe .`
