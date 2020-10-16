@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 	"github.com/fatih/color"
+	"github.com/inancgumus/screen"
 )
 
 // STATUS.BOSCH-IOT-SUITE.COM JSON
@@ -68,7 +69,7 @@ func ShowServiceStatusHealth(region string, sort string, verbose bool, watch boo
 	for {
 
 		dt := time.Now().UTC()
-		color.Cyan("Service Status Health as of %s in region %s sorted by %s", dt.String(), region, sort)
+		color.Cyan("Bosch IoT Suite Service Status Health as of %s in region %s sorted by %s", dt.String(), region, sort)
 		fmt.Println()
 
 		//color.Info.Tips("tips style message")
@@ -137,8 +138,11 @@ func ShowServiceStatusHealth(region string, sort string, verbose bool, watch boo
 		if !watch {
 			break
 		} else {
-			color.Yellow("\nWaiting for %d seconds.\n",waittime)
+			color.Yellow("\nRefreshing every %d seconds.\n",waittime)
 			time.Sleep(time.Duration(waittime) * time.Second)
+			
+			screen.Clear()
+			screen.MoveTopLeft()
 		}
 
 	}

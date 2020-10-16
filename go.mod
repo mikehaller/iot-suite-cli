@@ -5,12 +5,15 @@ go 1.14
 require (
 	github.com/TwinProduction/go-color v0.0.2
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
+	github.com/buger/goterm v0.0.0-20200322175922-2f3e71b85129
 	github.com/dixonwille/wlog/v3 v3.0.1
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gookit/color v1.2.6
+	github.com/inancgumus/screen v0.0.0-20190314163918-06e984b86ed3
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
+	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0

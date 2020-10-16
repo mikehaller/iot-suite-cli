@@ -2,15 +2,25 @@ package iotsuite
 
 import (
 	"encoding/json" // json rest api responses
-	"fmt"
 	"github.com/TylerBrock/colorjson"
+	"fmt"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"github.com/spf13/viper"
 )
 
 func dump(responseData []byte) {
+	var output = viper.GetString("output");
+	
+	if (output != "") {
+		fmt.Println("Response body written to file:", output)
+		ioutil.WriteFile(output, responseData , 0644)
+		return;
+	}
+	
+	fmt.Println("Response:")
 	var obj map[string]interface{}
 	var err = json.Unmarshal([]byte(responseData), &obj)
 	if err != nil {
@@ -46,7 +56,7 @@ func dump(responseData []byte) {
 
 func DumpJsonRequest(req *http.Request) {
 	if req.Header != nil {
-		fmt.Println(req.Header)
+		log.Debug(req.Header)
 	}
 	if req.Body != nil {
 		responseData, err3 := ioutil.ReadAll(req.Body)
@@ -59,7 +69,8 @@ func DumpJsonRequest(req *http.Request) {
 }
 
 func DumpJsonResponse(resp *http.Response) {
-	fmt.Println("HTTP Response:", resp.Status)
+	log.Debug("HTTP Response Status:", resp.Status)
+	log.WithFields(log.Fields{"resp":resp}).Trace("HTTP Response Dump")
 	if resp.Body != nil {
 		responseData, err3 := ioutil.ReadAll(resp.Body)
 		if err3 != nil {

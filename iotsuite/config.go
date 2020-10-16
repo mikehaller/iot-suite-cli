@@ -3,9 +3,11 @@ package iotsuite
 import (
 	"fmt"
 	"github.com/spf13/viper" // yml config
+	log "github.com/sirupsen/logrus"
 )
 
-func configDefaults() {
+func ConfigDefaults() {
+	log.Debug("Initializing default configuration values")
 	viper.SetEnvPrefix("BOSCH_IOT_")
 	viper.AutomaticEnv()
 	viper.SetConfigName("config")                 // name of config file (without extension)
@@ -36,14 +38,27 @@ type Configuration struct {
 }
 
 func ReadConfig() *Configuration {
-	configDefaults()
+	log.Debug("Reading configuration");
+	
 	err := viper.ReadInConfig() // Find and read the config file
+	
+	log.WithFields(log.Fields{"settings":viper.AllSettings()}).Trace("Viper settings")
+	
 	if err != nil {             // Handle errors reading the config file
-		fmt.Println("Configuration file not found, creating configuration file with current set of arguments in current working directory.")
-		viper.SafeWriteConfigAs("./config.yml")
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			fmt.Println("Configuration file not found, creating configuration file with current set of arguments in current working directory.")
+			viper.SafeWriteConfigAs("./config.yml")
+	    } else {
+	        fmt.Printf("Error reading configuration file, %v", err)
+	    }
 	}
+	
 	conf := &Configuration{}
+	
 	err = viper.Unmarshal(conf)
+
+	log.Debug("Configuration: %s",conf);
+	
 	if err != nil {
 		fmt.Printf("unable to decode into config struct, %v", err)
 	}

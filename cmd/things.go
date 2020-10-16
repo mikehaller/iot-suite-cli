@@ -34,6 +34,9 @@ func init() {
 	
 	thingsCmd.PersistentFlags().String("solutionId", "", "The Solution Id aka Service Instance ID")
 	viper.BindPFlag("solutionId", thingsCmd.PersistentFlags().Lookup("solutionId"))
+
+	thingsCmd.PersistentFlags().String("baseurl", "https://things.eu-1.bosch-iot-suite.com", "The base url for Things API, e.g. https://things.eu-1.bosch-iot-suite.com")
+	viper.BindPFlag("baseurl", thingsCmd.PersistentFlags().Lookup("baseurl"))
 }
 
 var thingsCmd = &cobra.Command{

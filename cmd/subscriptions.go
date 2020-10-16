@@ -8,12 +8,15 @@ import (
 
 var (
 	BaseUrl string
+	Product string
+	InstanceName string
 )
 
 func init() {
 	rootCmd.AddCommand(subscriptionsCmd)
+	subscriptionsCmd.AddCommand(listProductsCmd)
 	subscriptionsCmd.AddCommand(listSubscriptionsCmd)
-//	subscriptionsCmd.AddCommand(createSubscriptionCmd)
+	subscriptionsCmd.AddCommand(createSubscriptionCmd)
 //	subscriptionsCmd.AddCommand(terminateSubscriptionCmd)
 //	subscriptionsCmd.AddCommand(renameInstanceCmd)
 //	subscriptionsCmd.AddCommand(changePlanCmd)
@@ -24,9 +27,16 @@ func init() {
 //	statusCmd.Flags().StringVarP(&Region, "region", "r", "all", "The region of the endpoints (EU-1, EU-2 etc.)")
 //	viper.BindPFlag("region", statusCmd.Flags().Lookup("region"))
 
+	subscriptionsCmd.PersistentFlags().StringVarP(&BaseUrl, "baseurl", "b", "https://accounts.bosch-iot-suite.com", "Explicitly set the baseurl of the subscription management API (E.g. '/api/v3/subscriptions' is automatically appended)")
+	viper.BindPFlag("baseurl", subscriptionsCmd.PersistentFlags().Lookup("baseurl"))
 
-	listSubscriptionsCmd.Flags().StringVarP(&BaseUrl, "baseurl", "b", "https://accounts.bosch-iot-suite.com", "Explicitly set the baseurl of the subscription management API (E.g. '/api/v3/subscriptions' is automatically appended)")
-	viper.BindPFlag("baseurl", listSubscriptionsCmd.Flags().Lookup("baseurl"))
+	createSubscriptionCmd.Flags().StringVarP(&Product, "product", "p", "device-management", "The unique product id or name to provision")
+	createSubscriptionCmd.MarkFlagRequired("product")
+	viper.BindPFlag("product", createSubscriptionCmd.Flags().Lookup("product"))
+	
+	createSubscriptionCmd.Flags().StringVarP(&InstanceName, "instanceName", "n", "", "A unique name for the new service instance")
+	createSubscriptionCmd.MarkFlagRequired("instanceName")
+	viper.BindPFlag("instanceName", createSubscriptionCmd.Flags().Lookup("instanceName"))
 
 }
 
@@ -47,3 +57,24 @@ var listSubscriptionsCmd = &cobra.Command{
 	},
 }
 
+var listProductsCmd = &cobra.Command{
+	Use:   "products",
+	Short: "List available products",
+	Long:  `List all products which can be booked in your organisation`,
+	Run: func(cmd *cobra.Command, args []string) {
+		conf := iotsuite.ReadConfig()
+		httpclient := iotsuite.InitOAuth(conf)
+		iotsuite.ProductsList(httpclient)
+	},
+}
+
+var createSubscriptionCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Create a new subscription",
+	Long:  `Create a new subscription and automatically provision the service intance`,
+	Run: func(cmd *cobra.Command, args []string) {
+		conf := iotsuite.ReadConfig()
+		httpclient := iotsuite.InitOAuth(conf)
+		iotsuite.NewSubscription(httpclient,Product,InstanceName)
+	},
+}

@@ -26,14 +26,14 @@ func init() {
 	statusCmd.Flags().StringVarP(&Region, "region", "r", "all", "The region of the endpoints (EU-1, EU-2 etc.)")
 	viper.BindPFlag("region", statusCmd.Flags().Lookup("region"))
 
-	statusCmd.Flags().StringVarP(&Sort, "sort", "s", "name", "Sort the list by service name")
+	statusCmd.Flags().StringVarP(&Sort, "sort", "s", "name", "Sort the list by name, id or status")
 	viper.BindPFlag("sort", statusCmd.Flags().Lookup("sort"))
 	
 	statusCmd.Flags().BoolVarP(&Watch, "watch", "w", false, "Continously watch the status in an endless loop")
 	viper.BindPFlag("watch", statusCmd.Flags().Lookup("watch"))
 	
-	statusCmd.Flags().IntVarP(&Waittime, "time", "t", 30, "Number of seconds to wait between calls (between 5 and 600)")
-	viper.BindPFlag("time", statusCmd.Flags().Lookup("time"))
+	statusCmd.Flags().IntVarP(&Waittime, "interval", "i", 30, "When watching, number of seconds between calls (5..600)")
+	viper.BindPFlag("interval", statusCmd.Flags().Lookup("interval"))
 
 	rootCmd.AddCommand(statusCmd)
 }

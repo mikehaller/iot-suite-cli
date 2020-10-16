@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/TylerBrock/colorjson"
-	"github.com/fatih/color"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"github.com/spf13/viper"
 )
 
 // OAuth Token Response
@@ -28,60 +28,41 @@ type OAuthToken struct {
 	TokenType   string `json:"token_type"`
 }
 
-/*
-grant_type=client_credentials
-&client_id=e726c3f8-...
-&client_secret=...
-&scope=service:iot-hub-prod:t0262c358aab544399b78b4811bfd862b_hub/full-access%20service:iot-manager:0262c358-aab5-4439-9b78-b4811bfd862b_iot-manager/full-access%20service:iot-rollouts:0262c358-aab5-4439-9b78-b4811bfd862b_rollouts/full-access%20service:iot-things-eu-1:0262c358-aab5-4439-9b78-b4811bfd862b_things/full-access
-
-*/
-
-func err(conf *Configuration) {
-	fmt.Println("You need to specify all necessary OAuth2 client configuration parameters:")
-	if (conf.ClientId=="") {
-		fmt.Println("clientId is missing.")
-	}
-	if (conf.ClientSecret=="") {
-		fmt.Println("clientSecret is missing.")
-	}
-	if (conf.Scope=="") {
-		fmt.Println("scope is missing.")
-	}
-	fmt.Println("See https://accounts.bosch-iot-suite.com/oauth2-clients/")
-	os.Exit(2)
-}
-
 func Authorize(conf *Configuration) string {
 
 	var existingToken = LoadToken()
 	if existingToken.AccessToken != "" {
-		fmt.Printf("%v\n", color.YellowString("Warning: There is an existing token in the disk cache."))
-		fmt.Printf("%v\n", color.YellowString("Warning: Access token is being refreshed and updated in disk cache."))
+		log.Info("Existing token in disk cache will be refreshed (accesstoken.json)")
 	}
 
 	var clientId = conf.ClientId
 	var clientSecret = conf.ClientSecret
 	var scope = conf.Scope
 
-	if clientId == "" || clientSecret == "" || scope == "" {
-		err(conf)
-	}
-
-	response, err := http.PostForm("https://access.bosch-iot-suite.com/token",
-		url.Values{
+	var tokenurl = viper.GetString("tokenurl")
+	log.WithFields(log.Fields{"tokenurl":tokenurl}).Debug("Using authorization server token endpoint");
+	
+	var data = url.Values{
 			"grant_type":    {"client_credentials"},
 			"client_id":     {clientId},
 			"client_secret": {clientSecret},
-			"scope":         {scope}})
+			"scope":         {scope}}
+	
+	log.WithFields(log.Fields{"data":data}).Trace("HTTP Request Parameters")
+	
+	response, err := http.PostForm(tokenurl,data)
 
 	if response.StatusCode != 200 {
-		fmt.Println("HTTP Response:")
-		fmt.Println(response.Status)
+		
+		log.WithFields(log.Fields{"status":response.Status}).Debug("HTTP Response Status")
+		log.WithFields(log.Fields{"header":response.Header}).Trace("HTTP Response Headers")
+		
 		responseData, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			log.Fatal(err)
 			os.Exit(2)
 		}
+		
 		// https://stackoverflow.com/questions/19038598/how-can-i-pretty-print-json-using-go
 		var obj map[string]interface{}
 		json.Unmarshal([]byte(responseData), &obj)
@@ -90,7 +71,7 @@ func Authorize(conf *Configuration) string {
 		f.Indent = 4
 		// Marshall the Colorized JSON
 		s, _ := f.Marshal(obj)
-		fmt.Println(string(s))
+		log.Println(string(s))
 
 		os.Exit(3)
 	} else {
@@ -110,15 +91,25 @@ func Authorize(conf *Configuration) string {
 	var responseObject OAuthToken
 	json.Unmarshal(responseData, &responseObject)
 
-	fmt.Printf("%v %v\n", color.BlueString("Token Type:"), color.GreenString(responseObject.TokenType))
-	fmt.Printf("\n%v %v\n", color.BlueString("Scope:"), color.GreenString(responseObject.Scope))
-	fmt.Printf("\n%v\n%v\n", color.BlueString("Access Token:"), color.GreenString(responseObject.AccessToken))
-
-	fmt.Println()
-
-	fmt.Printf("%v %v %v\n", color.YellowString("Warning: Access token will expire in"), color.RedString(strconv.Itoa(responseObject.ExpiresIn)), color.YellowString("seconds."))
+	fmt.Printf("%v %v\n", "Token Type:", responseObject.TokenType)
+	fmt.Printf("%v %v\n", "Scope:", responseObject.Scope)
 
 	StoreToken(&responseObject)
+
+	var output = viper.GetString("output");
+	if (output != "") {
+		fmt.Println("Access token written to file in JWT format:", output)
+		ioutil.WriteFile(output, responseData , 0644)
+	} else {
+	}
+
+	log.WithFields(log.Fields{	"accessToken":responseObject.AccessToken,
+								"tokenType":responseObject.TokenType,
+								"scope":responseObject.Scope,
+								"expire":responseObject.ExpiresIn}).Trace("Access Token Response")
+	
+	var expirySeconds = strconv.Itoa(responseObject.ExpiresIn);
+	log.WithFields(log.Fields{"expiration":expirySeconds}).Info("Access token will expire")
 
 	return responseObject.AccessToken
 }
