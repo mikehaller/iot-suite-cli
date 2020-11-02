@@ -14,60 +14,34 @@ import (
 )
 
 
-type SubscriptionCreateRequest struct {
-	ProductId string `json:"productId"`
-	InstanceName string `json:"instanceName"`
+type OAuthClientCreateRequest struct {
+	ClientName string `json:"clientName"`
+	TargetInstance string `json:"targetInstance"`
 }
 
-type SubscriptionCancelRequest struct {
-	InstanceName string `json:"instanceName"`
+type OAuthClientDeleteRequest struct {
+	ClientName string `json:"clientName"`
 }
 
-
-type SubscriptionListRequest struct {
+type OAuthClientListRequest struct {
 //	Filter string `json:"filter"`
 //	Page int`json:"page"`
 }
 
-type SubscriptionListResponse struct {
-	Subscriptions []Subscription `json:"subscriptions"`
+type OAuthClientListResponse struct {
+	OAuthClients []OAuthClient `json:"clients"`
 }
 
-type Subscription struct {
-	SubscriptionId string `json:"subscriptionId"`
-	ServiceInstanceId string `json:"serviceInstanceId"`
-	ServiceInstanceName string `json:"serviceInstanceName"`
-	Status string `json:"status"`
-	PlanName string `json:"planName"`
+type OAuthClient struct {
+	ClientName string `json:"clientName"`
+	ClientId string `json:"clientId"`
+	Scopes string `json:"scopes"`
 }
 
-/**
-"cloudServiceDescription": "A simple example",
-        "cloudServiceId": "example-service",
-        "cloudServiceName": "example",
-        "currency": "EUR",
-        "dataCenter": "eu-1",
-        "deleted": false,
-        "evalUsersCanBook": true,
-        "freeplan": true,
-        "monthlyPrice": 0,
-        "planEnabled": true,
-        "planId": "free-plan",
-        "planName": "free",
-        "productId": "11111111-e936-458b-b9ac-16f8ce19e32c",
-        "productListingName": "example-service - free-plan - eu-1",
-        "productOfficialName": "Example Service"
-*/
-type Product struct {
-	Name string `json:"productListingName"`
-	Id string `json:"productId"`
-	ServiceDescription string `json:"cloudServiceDescription"`
-}
-
-func ProductsList(httpClient *http.Client) {
+func ListOAuthClients(httpClient *http.Client) {
 	var baseurl = viper.GetString("baseurl")
-	var url = baseurl + "/api/v3/products";
-	log.WithFields(log.Fields{"url": url}).Info("Using Subscription Management endpoint")
+	var url = baseurl + "/api/v3/oauthclients";
+	log.WithFields(log.Fields{"url": url}).Info("Using OAuth Client Management endpoint")
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	q := req.URL.Query() // Get a copy of the query values.
@@ -105,48 +79,11 @@ fmt.Printf("%-36s %-50s %s\n", "Product ID", "Product Name", "Service Descriptio
 
 }
 
-func SubscriptionsList(httpClient *http.Client) {
+func NewOAuthClient(httpClient *http.Client, product string, instanceName string) {
 	var baseurl = viper.GetString("baseurl")
-	var url = baseurl + "/api/v3/subscriptions";
+	var url = baseurl + "/api/v3/oauthclients";
 
-	log.WithFields(log.Fields{"url": url}).Info("Using Subscription Management endpoint")
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	q := req.URL.Query() // Get a copy of the query values.
-
-	req.URL.RawQuery = q.Encode() // Encode and assign back to the original query.
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Println()
-
-	DumpJsonResponse(resp)
-
-	responseData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(2)
-	}
-
-	var responseObject SubscriptionListResponse
-	json.Unmarshal(responseData, &responseObject)
-
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
-	}
-}
-
-
-func NewSubscription(httpClient *http.Client, product string, instanceName string) {
-	var baseurl = viper.GetString("baseurl")
-	var url = baseurl + "/api/v3/subscriptions";
-
-	log.WithFields(log.Fields{"url": url}).Info("Using Subscription Management endpoint")
+	log.WithFields(log.Fields{"url": url}).Info("Using OAuth Management endpoint")
 
 	body := &SubscriptionCreateRequest{
 	    ProductId:    product,
@@ -208,14 +145,14 @@ func NewSubscription(httpClient *http.Client, product string, instanceName strin
 	}
 }
 
-func CancelSubscription(httpClient *http.Client, instanceName string) {
+func DeleteOAuthClient(httpClient *http.Client, clientName string) {
 	var baseurl = viper.GetString("baseurl")
-	var url = baseurl + "/api/v3/subscriptions";
+	var url = baseurl + "/api/v3/oauthclient";
 
-	log.WithFields(log.Fields{"url": url}).Info("Using Subscription Management endpoint")
+	log.WithFields(log.Fields{"url": url}).Info("Using OAuth Management endpoint")
 
-	body := &SubscriptionCancelRequest{
-	    InstanceName: instanceName,
+	body := &OAuthClientDeleteRequest{
+	    ClientName: clientName,
 	}
 	bodyBuffer := new(bytes.Buffer)
 	json.NewEncoder(bodyBuffer).Encode(body)
@@ -247,7 +184,7 @@ func CancelSubscription(httpClient *http.Client, instanceName string) {
 				"trailer":req.Trailer,
 				"remoteAddr":req.RemoteAddr,
 				"requestURI":req.RequestURI,
-				"instanceName":instanceName,
+				"clientName":clientName,
 				"fullRequestObject":req,
 				"err": err }).Fatal("Fatal error on HTTP request")
 	}
@@ -263,11 +200,8 @@ func CancelSubscription(httpClient *http.Client, instanceName string) {
 		os.Exit(2)
 	}
 
-	var responseObject SubscriptionListResponse
+	var responseObject OAuthClientListResponse
 	json.Unmarshal(responseData, &responseObject)
 
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
-	}
+	// ...
 }

@@ -52,6 +52,13 @@ func Authorize(conf *Configuration) string {
 	
 	response, err := http.PostForm(tokenurl,data)
 
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(2)
+	}
+
+	log.Println(response.StatusCode)
+
 	if response.StatusCode != 200 {
 		
 		log.WithFields(log.Fields{"status":response.Status}).Debug("HTTP Response Status")
@@ -71,7 +78,7 @@ func Authorize(conf *Configuration) string {
 		f.Indent = 4
 		// Marshall the Colorized JSON
 		s, _ := f.Marshal(obj)
-		log.Println(string(s))
+		log.Fatal("Unable to authorize at ", tokenurl, "\n", string(s))
 
 		os.Exit(3)
 	} else {
@@ -82,7 +89,9 @@ func Authorize(conf *Configuration) string {
 		log.Fatal(err)
 		os.Exit(1)
 	}
+	
 	responseData, err := ioutil.ReadAll(response.Body)
+	
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(2)

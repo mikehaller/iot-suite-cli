@@ -17,6 +17,7 @@ func init() {
 	subscriptionsCmd.AddCommand(listProductsCmd)
 	subscriptionsCmd.AddCommand(listSubscriptionsCmd)
 	subscriptionsCmd.AddCommand(createSubscriptionCmd)
+	subscriptionsCmd.AddCommand(cancelSubscriptionCmd)
 //	subscriptionsCmd.AddCommand(terminateSubscriptionCmd)
 //	subscriptionsCmd.AddCommand(renameInstanceCmd)
 //	subscriptionsCmd.AddCommand(changePlanCmd)
@@ -37,6 +38,10 @@ func init() {
 	createSubscriptionCmd.Flags().StringVarP(&InstanceName, "instanceName", "n", "", "A unique name for the new service instance")
 	createSubscriptionCmd.MarkFlagRequired("instanceName")
 	viper.BindPFlag("instanceName", createSubscriptionCmd.Flags().Lookup("instanceName"))
+
+	cancelSubscriptionCmd.Flags().StringVarP(&InstanceName, "instanceName", "n", "", "A unique name for the new service instance")
+	cancelSubscriptionCmd.MarkFlagRequired("instanceName")
+	viper.BindPFlag("instanceName", cancelSubscriptionCmd.Flags().Lookup("instanceName"))
 
 }
 
@@ -71,10 +76,22 @@ var listProductsCmd = &cobra.Command{
 var createSubscriptionCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new subscription",
-	Long:  `Create a new subscription and automatically provision the service intance`,
+	Long:  `Create a new subscription and automatically provision the service instance`,
 	Run: func(cmd *cobra.Command, args []string) {
 		conf := iotsuite.ReadConfig()
 		httpclient := iotsuite.InitOAuth(conf)
 		iotsuite.NewSubscription(httpclient,Product,InstanceName)
 	},
 }
+
+var cancelSubscriptionCmd = &cobra.Command{
+	Use:   "cancel",
+	Short: "Cancel a subscription",
+	Long:  `Cancel the subscription and terminate the service instance`,
+	Run: func(cmd *cobra.Command, args []string) {
+		conf := iotsuite.ReadConfig()
+		httpclient := iotsuite.InitOAuth(conf)
+		iotsuite.CancelSubscription(httpclient,InstanceName)
+	},
+}
+

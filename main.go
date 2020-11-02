@@ -13,7 +13,7 @@ var (
 )
 
 func main() {
-	color.Cyan("Bosch IoT Suite CLI "+AppVersion+"\nCopyright (c) Bosch.IO GmbH, All right reserved.")
+	color.Cyan("Bosch IoT Suite CLI "+AppVersion+"\nCopyright (c) Mike Haller")
 	fmt.Println()
 	color.Unset() // Don't forget to unset
 
