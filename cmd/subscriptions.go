@@ -10,6 +10,7 @@ var (
 	BaseUrl string
 	Product string
 	InstanceName string
+	SubscriptionId string
 )
 
 func init() {
@@ -39,9 +40,9 @@ func init() {
 	createSubscriptionCmd.MarkFlagRequired("instanceName")
 	viper.BindPFlag("instanceName", createSubscriptionCmd.Flags().Lookup("instanceName"))
 
-	cancelSubscriptionCmd.Flags().StringVarP(&InstanceName, "instanceName", "n", "", "A unique name for the new service instance")
-	cancelSubscriptionCmd.MarkFlagRequired("instanceName")
-	viper.BindPFlag("instanceName", cancelSubscriptionCmd.Flags().Lookup("instanceName"))
+	cancelSubscriptionCmd.Flags().StringVarP(&InstanceName, "subscriptionId", "s", "", "A unique id of the subscription")
+	cancelSubscriptionCmd.MarkFlagRequired("subscriptionId")
+	viper.BindPFlag("subscriptionId", cancelSubscriptionCmd.Flags().Lookup("subscriptionId"))
 
 }
 
@@ -91,7 +92,7 @@ var cancelSubscriptionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		conf := iotsuite.ReadConfig()
 		httpclient := iotsuite.InitOAuth(conf)
-		iotsuite.CancelSubscription(httpclient,InstanceName)
+		iotsuite.CancelSubscription(httpclient,SubscriptionId)
 	},
 }
 

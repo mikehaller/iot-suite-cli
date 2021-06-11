@@ -57,26 +57,7 @@ func ListOAuthClients(httpClient *http.Client) {
 
 	// DumpJsonResponse(resp)
 
-	responseData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(2)
-	}
-
-	var responseObject []Product
-	jsonErr := json.Unmarshal([]byte(responseData), &responseObject)
-	// err := json.Unmarshal([]byte(dataJson), &arr)
-	if (jsonErr != nil) {
-		log.Fatal(jsonErr);
-		os.Exit(2);
-	}
-
-fmt.Printf("%-36s %-50s %s\n", "Product ID", "Product Name", "Service Description")
-	for i := 0; i < len(responseObject); i++ {
-		var product = responseObject[i]
-		fmt.Printf("%-36s %-50s %s\n", product.Id, product.Name, product.ServiceDescription)
-	}
-
+	// TODO ... 
 }
 
 func NewOAuthClient(httpClient *http.Client, product string, instanceName string) {
@@ -130,19 +111,7 @@ func NewOAuthClient(httpClient *http.Client, product string, instanceName string
 
 	DumpJsonResponse(resp)
 
-	responseData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"req":req, "resp":resp, "err": err}).Fatal("Fatal error on reading HTTP response body")
-		os.Exit(2)
-	}
 
-	var responseObject SubscriptionListResponse
-	json.Unmarshal(responseData, &responseObject)
-
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
-	}
 }
 
 func DeleteOAuthClient(httpClient *http.Client, clientName string) {

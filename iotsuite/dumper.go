@@ -56,12 +56,12 @@ func dump(responseData []byte) {
 
 func DumpJsonRequest(req *http.Request) {
 	if req.Header != nil {
-		log.Debug(req.Header)
+		log.Debug("HTTP Request Header:",req.Header)
 	}
 	if req.Body != nil {
 		responseData, err3 := ioutil.ReadAll(req.Body)
 		if err3 != nil {
-			log.Fatal(err3)
+			log.Fatal("Unable to read body octets:",err3)
 			os.Exit(2)
 		}
 		dump(responseData)
@@ -74,9 +74,11 @@ func DumpJsonResponse(resp *http.Response) {
 	if resp.Body != nil {
 		responseData, err3 := ioutil.ReadAll(resp.Body)
 		if err3 != nil {
-			log.Fatal(err3)
+			log.Fatal("DumpJsonResponse:",err3)
 			os.Exit(2)
 		}
 		dump(responseData)
+	} else {
+		log.Debug("HTTP Response Body is nil")	
 	}
 }

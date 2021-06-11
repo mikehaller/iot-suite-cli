@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"github.com/spf13/viper"
 	"net/http/httptrace"
+	"time"
 )
 
 
@@ -29,17 +30,46 @@ type SubscriptionListRequest struct {
 //	Page int`json:"page"`
 }
 
-type SubscriptionListResponse struct {
-	Subscriptions []Subscription `json:"subscriptions"`
+type Subscription struct {
+	ServiceInstanceName string `json:"instanceName"`
+	FreePlan bool `json:"freePlan"`
+	OrderDate time.Time`json:"orderDate"`
+	OrgId string `json:"organizationId"`
+	OrgName string `json:"organizationName"`
+	PlanDescription string `json:"planDescription"`
+	PlanName string `json:"planName"`
+	Platform string `json:"platform"`
+	ProductId string `json:"productId"`
+	ProductName string `json:"productName"`
+	ProductRegion string `json:"productRegion"`
+	ProvisioningDate time.Time `json:"provisioningDate"`
+	Status string `json:"status"`
+	SubscriptionId string `json:"subscriptionId"`
+	ServiceInstances map[string]interface{} `json:"serviceInstances"`
 }
 
-type Subscription struct {
-	SubscriptionId string `json:"subscriptionId"`
-	ServiceInstanceId string `json:"serviceInstanceId"`
-	ServiceInstanceName string `json:"serviceInstanceName"`
-	Status string `json:"status"`
-	PlanName string `json:"planName"`
-}
+/*
+
+"freePlan": true,
+        "instanceName": "DONT DELETE. AC dummy paid. Allows to switch plan of AC subscriptions.",
+        "orderDate": "2020-03-04T12:34:27Z",
+        "organizationId": "a058d238-0902-4050-9056-7e27b6710711",
+        "organizationName": "IOC/PAP-SP-Testorg",
+        "planDescription": "Free Plan",
+        "planName": "Free Plan",
+        "platform": "AWS",
+        "productId": "7f430995-e293-49ac-b485-3ae736113fb4",
+        "productName": "com.bosch.iot.suite.telemetry - free - eu-1",
+        "productRegion": "EU_1",
+        "provisioningDate": "2020-03-04T12:34:27Z",
+        "serviceInstances": {
+            "iot-hub": "314f6c35-0e0e-4f64-9d3c-ac79552d3f97",
+            "iot-things": "314f6c35-0e0e-4f64-9d3c-ac79552d3f97"
+        },
+        "status": "Active",
+        "subscriptionId": "adc2add0-6def-436d-9d60-cf3b9b7819d6",
+        "terminationDate": ""
+*/
 
 /**
 "cloudServiceDescription": "A simple example",
@@ -59,9 +89,12 @@ type Subscription struct {
         "productOfficialName": "Example Service"
 */
 type Product struct {
-	Name string `json:"productListingName"`
 	Id string `json:"productId"`
-	ServiceDescription string `json:"cloudServiceDescription"`
+	ProductName string `json:"productName"`
+	ProductVariant string `json:"productVariant"`
+	PlanName string `json:"planName"`
+	ProductRegion string `json:"productRegion"`
+	FreePlan bool `json:"freePlan"`
 }
 
 func ProductsList(httpClient *http.Client) {
@@ -71,36 +104,38 @@ func ProductsList(httpClient *http.Client) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	q := req.URL.Query() // Get a copy of the query values.
-		req.URL.RawQuery = q.Encode() // Encode and assign back to the original query.
+	q.Add("orgId", viper.GetString("orgId"))
+	req.URL.RawQuery = q.Encode() // Encode and assign back to the original query.
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ProductsList HTTP Request generally failed:",err)
 	}
 	defer resp.Body.Close()
 
 	fmt.Println()
 
-	// DumpJsonResponse(resp)
+	DumpJsonResponse(resp)
 
 	responseData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Reading response body for ProductsList failed:",err)
 		os.Exit(2)
 	}
 
+	log.Debug("Body:", string(responseData));
+
 	var responseObject []Product
 	jsonErr := json.Unmarshal([]byte(responseData), &responseObject)
-	// err := json.Unmarshal([]byte(dataJson), &arr)
 	if (jsonErr != nil) {
-		log.Fatal(jsonErr);
+		log.Fatal("Unmarshalling response body for ProductsList failed:",jsonErr);
 		os.Exit(2);
 	}
 
-fmt.Printf("%-36s %-50s %s\n", "Product ID", "Product Name", "Service Description")
+	fmt.Printf("%-38q %-50q %-20q %-7q %q\n", "Product ID", "Product Name", "Plan Name","Region","Free?")
 	for i := 0; i < len(responseObject); i++ {
 		var product = responseObject[i]
-		fmt.Printf("%-36s %-50s %s\n", product.Id, product.Name, product.ServiceDescription)
+		fmt.Printf("%-38q %-50q %-20q %-7q %t\n", product.Id, product.ProductName, product.PlanName, product.ProductRegion, product.FreePlan)
 	}
 
 }
@@ -113,7 +148,7 @@ func SubscriptionsList(httpClient *http.Client) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	q := req.URL.Query() // Get a copy of the query values.
-
+	q.Add("orgId", viper.GetString("orgId"))
 	req.URL.RawQuery = q.Encode() // Encode and assign back to the original query.
 
 	resp, err := httpClient.Do(req)
@@ -122,9 +157,8 @@ func SubscriptionsList(httpClient *http.Client) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println()
-
-	DumpJsonResponse(resp)
+	// fmt.Println()
+	// DumpJsonResponse(resp)
 
 	responseData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -132,12 +166,16 @@ func SubscriptionsList(httpClient *http.Client) {
 		os.Exit(2)
 	}
 
-	var responseObject SubscriptionListResponse
-	json.Unmarshal(responseData, &responseObject)
+	var responseObject []Subscription
+	jsonErr := json.Unmarshal([]byte(responseData), &responseObject)
+	if (jsonErr != nil) {
+		log.Fatal(jsonErr);
+		os.Exit(2);
+	}
 
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
+	for i := 0; i < len(responseObject); i++ {
+		var sub = responseObject[i]
+		fmt.Printf("%-38s %-12s %-20s %s %s %-20s\n", sub.SubscriptionId, sub.Status, sub.ServiceInstanceName, sub.ProductName, sub.OrderDate.Format(time.RFC3339), sub.ServiceInstances)
 	}
 }
 
@@ -152,15 +190,30 @@ func NewSubscription(httpClient *http.Client, product string, instanceName strin
 	    ProductId:    product,
 	    InstanceName: instanceName,
 	}
-	bodyBuffer := new(bytes.Buffer)
+	
+	bodyBuffer := new(bytes.Buffer);
 	json.NewEncoder(bodyBuffer).Encode(body)
 
 	req, err := http.NewRequest(http.MethodPost, url, bodyBuffer)
 	req.Header.Set("Content-Type", "application/json")
+	
+	q := req.URL.Query() // Get a copy of the query values.
+	q.Add("orgId", viper.GetString("orgId"))
+	req.URL.RawQuery = q.Encode() // Encode and assign back to the original query.
+	
     req = req.WithContext(httptrace.WithClientTrace(req.Context(), newHttpTrace()))
     if _, err := http.DefaultTransport.RoundTrip(req); err != nil {
     		log.WithFields(log.Fields{"err": err}).Fatal("Fatal error on HTTP roundtrip")
     }
+
+		log.WithFields(log.Fields{
+				"body":bodyBuffer.String(),
+				"url":url,
+				"product":product,
+				"instanceName":instanceName,
+				"fullRequestObject":req,
+				"err": err }).Info("Info")
+
 
 	// Execute HTTP Request
 	resp, err := httpClient.Do(req)
@@ -193,19 +246,6 @@ func NewSubscription(httpClient *http.Client, product string, instanceName strin
 
 	DumpJsonResponse(resp)
 
-	responseData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"req":req, "resp":resp, "err": err}).Fatal("Fatal error on reading HTTP response body")
-		os.Exit(2)
-	}
-
-	var responseObject SubscriptionListResponse
-	json.Unmarshal(responseData, &responseObject)
-
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
-	}
 }
 
 func CancelSubscription(httpClient *http.Client, instanceName string) {
@@ -257,17 +297,4 @@ func CancelSubscription(httpClient *http.Client, instanceName string) {
 
 	DumpJsonResponse(resp)
 
-	responseData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"req":req, "resp":resp, "err": err}).Fatal("Fatal error on reading HTTP response body")
-		os.Exit(2)
-	}
-
-	var responseObject SubscriptionListResponse
-	json.Unmarshal(responseData, &responseObject)
-
-	for i := 0; i < len(responseObject.Subscriptions); i++ {
-		var sub = responseObject.Subscriptions[i]
-		fmt.Printf("%-10s %32s %32s %32s\n", sub.Status, sub.ServiceInstanceName, sub.ServiceInstanceId, sub.SubscriptionId)
-	}
 }
